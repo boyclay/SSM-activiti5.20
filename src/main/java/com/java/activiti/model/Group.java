@@ -1,13 +1,10 @@
 package com.java.activiti.model;
 
-import org.apache.ibatis.type.Alias;
-
 /**
  * 角色实体扩展
  * @author user
  *
  */
-@Alias("Group")
 public class Group {
 
 	private String id; // 主键 角色名

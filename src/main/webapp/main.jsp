@@ -7,11 +7,11 @@
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>员工请假流程系统-主页面</title>
 <%
-	// 权限验证
-	if(session.getAttribute("currentMemberShip")==null){
-		response.sendRedirect("login.jsp");
-		return;
-	}
+// 	// 权限验证
+// 	if(session.getAttribute("currentMemberShip")==null){
+// 		response.sendRedirect("login.jsp");
+// 		return;
+// 	}
 %>
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/default/easyui.css">
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/icon.css">
@@ -123,6 +123,7 @@
 				<a href="javascript:openTab('用户权限管理','authManage.jsp','icon-power')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-power'" style="width: 150px">用户权限管理</a>
 			</div>
 			<div title="流程管理"  data-options="iconCls:'icon-flow'" style="padding:10px;">
+			<a href="javascript:openTab('流程设计','processDesign.jsp','icon-design')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-design'" style="width: 150px;">流程设计</a>
 				<a href="javascript:openTab('流程部署管理','deployManage.jsp','icon-deploy')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-deploy'" style="width: 150px;">流程部署管理</a>
 				<a href="javascript:openTab('流程定义管理','processDefinitionManage.jsp','icon-definition')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-definition'" style="width: 150px;">流程定义管理</a>
 			</div>

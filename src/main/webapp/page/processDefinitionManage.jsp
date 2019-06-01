@@ -11,17 +11,31 @@
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
 <script type="text/javascript">
+
 	function searchProcessDefinition(){
 		$("#dg").datagrid('load',{
 			"s_name":$("#s_name").val()
 		});
 	}
+	
 	function formatAction(val,row){
-		return "<a href='${pageContext.request.contextPath}/processDefinition/showView.action?deploymentId="+row.deploymentId+"&diagramResourceName="+row.diagramResourceName+"' target='_blank'>查看流程图</a>"
+		return "<a href='${pageContext.request.contextPath}/processDefinition/showView.action?deploymentId="+row.deploymentId+"&diagramResourceName="+row.diagramResourceName+"' target='_blank'>查看流程图</a>&nbsp;<a href='javascript:actProcessDefinition("+row.deploymentId+")'>激活</a>&nbsp;<a href='javascript:susProcessDefinition("+row.deploymentId+")'>挂起</a>";
+	}
+	
+	function actProcessDefinition(deploymentId){
+		$.post("${pageContext.request.contextPath}/processDefinition/actProcessDefinition",{deploymentId:deploymentId},function(){
+				$.messager.alert("系统系统"," 部署成功！！！");
+		},"json");
+	}
+	
+	function susProcessDefinition(deploymentId){
+		$.post("${pageContext.request.contextPath}/processDefinition/susProcessDefinition",{deploymentId:deploymentId},function(){
+				$.messager.alert("系统系统"," 部署成功！！！");
+		},"json");
 	}
 </script>
 </head>
-<body style="margin: 1px">
+<body style="margin: 1px">				
 <table id="dg" title="流程定义管理" class="easyui-datagrid"
   fitColumns="true" pagination="true" rownumbers="true"
   url="${pageContext.request.contextPath}/processDefinition/processDefinitionPage.action" fit="true" toolbar="#tb">
@@ -32,10 +46,9 @@
  		<th field="name" width="60" align="center">流程名称</th>
  		<th field="key" width="50" align="center">流程定义的key</th>
  		<th field="version" width="20" align="center">版本</th>
- 		<th field="resourceName" width="70" align="center">流程定义的规则文件名称</th>
- 		<th field="diagramResourceName" width="70" align="center">流程定义的规则图片名称</th>
  		<th field="deploymentId" width="30" align="center">流程部署Id</th>
- 		<th field="aa" width="30" align="center" formatter="formatAction">操作</th>
+ 		<th field="suspensionState" width="30" align="center">状态</th>
+ 		<th field="action" width="80" align="center" formatter="formatAction">操作</th>
  	</tr>
  </thead>
 </table>

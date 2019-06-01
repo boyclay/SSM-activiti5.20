@@ -3,7 +3,7 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.java.activiti.dao.GroupDao">
-	<resultMap type="com.java.activiti.model.Group" id="GroupResult">
+	<resultMap type="group" id="GroupResult">
 		<result property="id" column="id_"/>
 		<result property="name" column="name_"/>
 	</resultMap>
@@ -32,11 +32,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
        	</foreach>
 	</delete>
 	
-	<insert id="addGroup" parameterType="Group">
+	<insert id="addGroup" parameterType="group">
 		insert into act_id_group values(#{id},null,#{name},null);
 	</insert>
 	
-	<update id="updateGroup" parameterType="Group">
+	<update id="updateGroup" parameterType="group">
 		update act_id_group
 		<set>
 			<if test="name!=null and name!='' ">

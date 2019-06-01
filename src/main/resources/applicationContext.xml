@@ -10,6 +10,9 @@
         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd  
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
 
+
+	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
+	
 	<!-- 配置数据源 -->
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
@@ -24,7 +27,7 @@
 	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
 		<property name="dataSource" ref="dataSource" />
 		<!-- mybatis配置文件 -->
-		<property name="typeAliasesPackage" value="com.java.activiti.model"/>
+		<property name="typeAliasesPackage" value="com.java.activiti.model" />
 		<!-- 自动扫描mappers.xml文件 -->
 		<property name="mapperLocations" value="classpath:com/java/activiti/mappers/*.xml"></property>
 	</bean>

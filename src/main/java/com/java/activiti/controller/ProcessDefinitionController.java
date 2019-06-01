@@ -101,11 +101,7 @@ public class ProcessDefinitionController {
 	@RequestMapping("/showViewByTaskId")
 	public String showViewByTaskId(String taskId,HttpServletResponse response)throws Exception{
 		String processDefinitionId =  historyService.createHistoricTaskInstanceQuery().taskId(taskId).singleResult().getProcessDefinitionId();
-		System.out.println(processDefinitionId);
 		ProcessDefinition processDefinition= repositoryService.createProcessDefinitionQuery().processDefinitionId(processDefinitionId).singleResult();
-//		List<String> resourceNameList = repositoryService.getDeploymentResourceNames(processDefinition.getDeploymentId());
-//		System.out.println(resourceNameList.size());
-//		InputStream inputStream=repositoryService.getResourceAsStream("40004", "diagrams/activitiEmployeeProcess.png");
 		InputStream inputStream = repositoryService.getProcessDiagram(processDefinition.getId());
 		OutputStream out=response.getOutputStream();
 		for(int b=-1;(b=inputStream.read())!=-1;){
@@ -116,4 +112,24 @@ public class ProcessDefinitionController {
 		return null;
 	}
 	
+	/**
+	 * 激活流程定义
+	 * @param processDefinitionId  流程ID
+	 * @return
+	 */
+	@RequestMapping("/actProcessDefinition")
+	public void actProcessDefinition(String deploymentId){
+		repositoryService.activateProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+	}
+	
+	/**
+	 * 挂起流程定义
+	 * @param processDefinitionId  流程定义ID
+	 * @param diagramResourceName
+	 * @return
+	 */
+	@RequestMapping("/susProcessDefinition")
+	public void susProcessDefinition(String deploymentId){
+		repositoryService.suspendProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+	}
 }
