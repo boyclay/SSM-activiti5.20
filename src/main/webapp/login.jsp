@@ -24,7 +24,7 @@
 			success:function(result){
 				var result=eval('('+result+')');
 				if(result.success){
-					window.location.href="${pageContext.request.contextPath}/main.jsp";
+					window.location.href="${pageContext.request.contextPath}/user/main.action";
 				}else{
 					$.messager.alert("系统提示",result.errorInfo);
 					return;

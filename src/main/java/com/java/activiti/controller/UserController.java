@@ -220,4 +220,9 @@ public class UserController {
 	public String logout(HttpServletResponse response,HttpServletRequest request){
 		return "login";
 	}
+	
+	@RequestMapping("/main")
+	public String main(){
+		return "page/main";
+	}
 }
