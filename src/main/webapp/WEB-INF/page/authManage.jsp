@@ -27,19 +27,11 @@
 		var row=selectRows[0];
 		$("#dlg").dialog("open").dialog("setTitle","设置用户权限");
 		loadAllGroups(); // 加载所有角色
+		//延时加载！！！！！2019/06/03
 		setRoles(selectRows[0].id);
 		url="${pageContext.request.contextPath}/memberShip/updateMemberShip.action?userId="+selectRows[0].id;
 	}
 	
-	function setRoles(userId){
-		$.post("${pageContext.request.contextPath}/group/findGroupByUserId.action",{userId:userId},function(result){
-			var groups=result.groups;
-			var groupsArr=groups.split(",");
-			for(var i=0;i<groupsArr.length;i++){
-				$("[value="+groupsArr[i]+"]:checkbox").attr("checked",true);
-			}
-		},"json");
-	}
 	
 	function loadAllGroups(){
 		$.post("${pageContext.request.contextPath}/group/listAllGroups.action",{},function(result){
@@ -52,6 +44,15 @@
 		},"json");
 	}
 	
+	function setRoles(userId){
+		$.post("${pageContext.request.contextPath}/group/findGroupByUserId.action",{userId:userId},function(result){
+			var groups=result.groups;
+			var groupsArr=groups.split(",");
+			for(var i=0;i<groupsArr.length;i++){
+				$("[value="+groupsArr[i]+"]:checkbox").attr("checked",true);
+			}
+		},"json");
+	}
 	
 	function closeAuthDialog(){
 		$("#dlg").dialog("close");

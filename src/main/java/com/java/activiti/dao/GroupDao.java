@@ -48,4 +48,6 @@ public interface GroupDao {
 	public int addGroup(Group group);
 	
 	public List<Group> findByUserId(String id);
+	
+	public int existGroupName(Group group);
 }

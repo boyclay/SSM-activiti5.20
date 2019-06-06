@@ -13,6 +13,7 @@ public class Leave {
 	private User user; // 请假人
 	private Date leaveDate;// 请假日期
 	private Integer leaveDays; // 请假天数
+	private String leaveType; // 请假类型
 	private String leaveReason; // 请假原因
 	private String state; // 审核状态  未提交  审核中 审核通过 审核未通过
 	private String processInstanceId; // 流程实例Id
@@ -59,6 +60,10 @@ public class Leave {
 	public void setProcessInstanceId(String processInstanceId) {
 		this.processInstanceId = processInstanceId;
 	}
-	
-	
+	public String getLeaveType() {
+		return leaveType;
+	}
+	public void setLeaveType(String leaveType) {
+		this.leaveType = leaveType;
+	}
 }

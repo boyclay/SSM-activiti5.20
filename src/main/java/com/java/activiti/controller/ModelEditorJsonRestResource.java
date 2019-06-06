@@ -55,7 +55,6 @@ public class ModelEditorJsonRestResource
           .getModelEditorSource(model
           .getId()), "utf-8"));
         modelNode.put("model", editorJsonNode);
-//        response.sendRedirect(request.getContentType()+"/act/rest/modeeler.html?modelId="+modelId);
       }
       catch (Exception e) {
         LOGGER.error("Error creating model JSON", e);
@@ -75,8 +74,9 @@ public class ModelEditorJsonRestResource
 		editorNode.put("resourceId", "canvas");
 		ObjectNode propertiesNode = objectMapper.createObjectNode();
 		propertiesNode.put("name", processModel.getProcessName());
+		propertiesNode.put("description", processModel.getProcessDescription());
 		propertiesNode.put("process_id", processModel.getProcessKey());
-		propertiesNode.put("process_author", "Aven");
+		propertiesNode.put("process_author", "wqb");
 		propertiesNode.put("executionlisteners", "");
 		propertiesNode.put("eventlisteners", "");
 		editorNode.put("properties", propertiesNode);
@@ -93,9 +93,7 @@ public class ModelEditorJsonRestResource
 		repositoryService.saveModel(modelData);
 		repositoryService.addModelEditorSource(modelData.getId(), editorNode.toString().getBytes("UTF8"));
 		return modelData.getId();
-//		response.sendRedirect(request.getContextPath()+"/act/rest/modeler.html?modelId="+modelData.getId());
 	} catch (Exception e) {
-		// LOGGER.error(Constant.EXCEPTION, e);
 		e.printStackTrace();
 	}
 	return null;

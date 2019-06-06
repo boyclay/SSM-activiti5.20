@@ -1,19 +1,19 @@
 package com.java.activiti.controller;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-import net.sf.json.JsonConfig;
-
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
 import org.springframework.stereotype.Controller;
@@ -25,6 +25,10 @@ import com.java.activiti.model.User;
 import com.java.activiti.service.LeaveService;
 import com.java.activiti.util.DateJsonValueProcessor;
 import com.java.activiti.util.ResponseUtil;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import net.sf.json.JsonConfig;
 
 /**
  * 业务处理
@@ -42,6 +46,10 @@ public class LeaveController {
 	private RuntimeService runtimeService;
 	@Resource
 	private TaskService taskService;
+	
+	@Resource
+	private RepositoryService repositoryService;
+	
 	/**
 	 * 分页查询业务
 	 * @param response
@@ -86,7 +94,6 @@ public class LeaveController {
 	 */
 	@RequestMapping("/save")
 	public String save(Leave leave,HttpServletResponse response,String userId)throws Exception{
-		System.out.println("这里面是什么鬼："+userId);
 		User user=new User();
 		user.setId(userId);
 		int resultTotal=0;
@@ -113,12 +120,12 @@ public class LeaveController {
 		Map<String,Object> variables=new HashMap<String,Object>();
 		variables.put("leaveId", leaveId);
 		// 启动流程
-		ProcessInstance pi= runtimeService.startProcessInstanceByKey("activitiemployeeProcess",variables); 
+		Leave leave=leaveService.findById(leaveId);
+		ProcessInstance pi= runtimeService.startProcessInstanceByKey(leave.getLeaveType(),variables); 
 		// 根据流程实例Id查询任务
 		Task task=taskService.createTaskQuery().processInstanceId(pi.getProcessInstanceId()).singleResult(); 
 		 // 完成 学生填写请假单任务		
 		taskService.complete(task.getId()); 
-		Leave leave=leaveService.findById(leaveId);
 		//修改状态
 		leave.setState("审核中");
 		leave.setProcessInstanceId(pi.getProcessInstanceId());
@@ -144,6 +151,45 @@ public class LeaveController {
 		JSONObject result=new JSONObject();
 		result.put("leave", JSONObject.fromObject(leave));
 		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	/**
+	 * 获取所有流程定义
+	 * @param response
+	 * @param taskId  流程实例ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/getLeaveType")
+	public String getLeaveType(HttpServletResponse response,String taskId) throws Exception{
+		//先根据流程ID查询
+		List<ProcessDefinition> processDefinitionList = repositoryService.createProcessDefinitionQuery()
+				.orderByProcessDefinitionVersion().asc().list();
+		// 定义有序map，相同的key,添加map值后，后面的会覆盖前面的值
+		Map<String, ProcessDefinition> processDefinitionMap = new LinkedHashMap<String, ProcessDefinition>();
+		// 遍历相同的key，替换最新的值
+		for (ProcessDefinition pd : processDefinitionList) {
+			processDefinitionMap.put(pd.getKey(), pd);
+		}
+		List<Map<String, Object>> keyAndNameList = new ArrayList<>();
+		for (ProcessDefinition p : processDefinitionMap.values()) {
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("name", p.getName());
+			map.put("key", p.getKey());
+			keyAndNameList.add(map);
+		}
+		
+		JSONArray jsonArray=new JSONArray();
+
+		JSONObject jsonObject=new JSONObject();
+		jsonObject.put("trueName", "请选择...");
+		//转为JSON格式的数据
+		jsonArray.add(jsonObject);
+		//将list转为JSON
+		JSONArray rows=JSONArray.fromObject(keyAndNameList);
+		jsonArray.addAll(rows);
+		ResponseUtil.write(response, jsonArray);
 		return null;
 	}
 }

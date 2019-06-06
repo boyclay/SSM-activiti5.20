@@ -38,7 +38,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	
 	<insert id="addLeave" parameterType="Leave">
-		insert into t_leave values(null,#{user.id},#{leaveDate},#{leaveDays},#{leaveReason},#{state},#{processInstanceId})
+		insert into t_leave values(null,#{user.id},#{leaveDate},#{leaveDays},#{leaveReason},#{state},#{processInstanceId},#{leaveType})
 	</insert>
 	
 	<select id="findById" parameterType="String" resultMap="LeaveResult">

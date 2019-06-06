@@ -67,4 +67,8 @@ public class GroupServiceImpl implements GroupService{
 	public int addGroup(Group group){
 		return groupDao.addGroup(group);
 	}
+	@Override
+	public int existGroupName(Group group) {
+		return groupDao.existGroupName(group);
+	}
 }

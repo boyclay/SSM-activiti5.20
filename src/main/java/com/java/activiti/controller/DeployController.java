@@ -206,24 +206,28 @@ public class DeployController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/deployModel")
-	public void deployModel(HttpServletResponse response,String modelId) throws Exception {
+	public String deployModel(HttpServletResponse response,String modelId) throws Exception {
 		Model modelData = repositoryService.getModel(modelId);
 		ObjectNode modelNode;
+		JSONObject result = new JSONObject();
 		try {
 			modelNode = (ObjectNode) new ObjectMapper()
 					.readTree(repositoryService.getModelEditorSource(modelData.getId()));
 			byte[] bpmnBytes = null;
 			CustomBpmnJsonConverter.getConvertersToBpmnMap().put("UserTask", UserTaskExtendJsonConverter.class);//扩展属性新加代码
 			CustomBpmnJsonConverter jsonConverter = new CustomBpmnJsonConverter();
-//			BpmnJsonConverter jsonConverter = new BpmnJsonConverter();
 			BpmnModel model =jsonConverter.convertToBpmnModel(modelNode);
 			bpmnBytes = new BpmnXMLConverter().convertToXML(model);
 			String processName = modelData.getKey() + ".bpmn20.xml";
 			Deployment d = repositoryService.createDeployment().name(modelData.getKey())
 					.addString(processName, new String(bpmnBytes, "UTF8")).deploy();
+			result.put("success", true);
 		} catch (IOException e) {
 			e.printStackTrace();
+			result.put("success", false);
 		}
+		ResponseUtil.write(response, result);
+		return null;
 	}
 
 	/**
@@ -309,7 +313,16 @@ public class DeployController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/deleteModel")
-	public void deleteModel(String modelId) {
-		repositoryService.deleteModel(modelId);
+	public String deleteModel(HttpServletResponse response, String modelId) throws Exception {
+		JSONObject result = new JSONObject();
+		try {
+			repositoryService.deleteModel(modelId);
+			result.put("success", true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.put("success", false);
+		}
+		ResponseUtil.write(response, result);
+		return null;
 	}
 }

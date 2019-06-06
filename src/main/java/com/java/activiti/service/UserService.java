@@ -43,4 +43,20 @@ public interface UserService {
 	 * @return
 	 */
 	public int addUser(User user);
+	
+	/**
+	 * 用户存在校验
+	 * @param user
+	 * @return
+	 */
+	public int existUserName(User user);
+	
+	/**
+	 * 用户密码修改
+	 * @param user
+	 * @return
+	 */
+	public void modifyPassword(User user);
 }
+
+

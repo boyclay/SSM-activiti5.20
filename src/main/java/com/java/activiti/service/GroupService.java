@@ -42,4 +42,6 @@ public interface GroupService {
 	public int updateGroup(Group group);
 	
 	public int addGroup(Group group);
+	
+	public int existGroupName(Group group);
 }

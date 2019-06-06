@@ -40,6 +40,10 @@
 		$("#fm").form("submit", {
 			url : '${pageContext.request.contextPath}/leave/save.action',
 			onSubmit : function() {
+				if($("#leaveType").combobox("getValue")=="请选择"){
+					$.messager.alert("系统提示","请选择休假类型！");
+					return false;
+				}
 				return $(this).form("validate");
 			},
 			success : function(result) {
@@ -132,17 +136,6 @@
 				<td>
 					<input  id="leaveType" name="leaveType" class="easyui-combobox" data-options="panelHeight:'auto',valueField:'key',textField:'name',url:'${pageContext.request.contextPath}/leave/getLeaveType.action'" value="请选择"/>
 				</td>
-<!-- 			<td>请假类型：</td> -->
-<%-- 			<input  id="leaveType" name="leaveType" class="easyui-combobox" data-options="panelHeight:'auto',valueField:'id',textField:'name',url:'${pageContext.request.contextPath}/group/findGroup.action'" value="请选择"/> --%>
-<!-- 			</td> -->
-<!-- 				<td>请假类型：</td> -->
-<!-- 				<td><select id="leaveType" class="easyui-combobox" name="leaveType" -->
-<!-- 					style="width: 200px;"> -->
-<!-- 						<option value="OT" >加班</option> -->
-<!-- 						<option value="AL">年假</option> -->
-<!-- 						<option value="PL">事假</option> -->
-<!-- 						<option value="SL">病假</option> -->
-<!-- 				</select></td> -->
 			</tr>
  			<tr>
  				<td>请假天数：</td>

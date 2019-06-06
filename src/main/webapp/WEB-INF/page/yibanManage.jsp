@@ -4,39 +4,46 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-<title>历史任务管理</title>
+<title>已办任务管理</title>
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/default/easyui.css">
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/icon.css">
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/jquery.min.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/jquery.easyui.min.js"></script>
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
 <script type="text/javascript">
+
 	function searchTask(){
 		$("#dg").datagrid('load',{
 			"s_name":$("#s_name").val()
 		});
 	}
+
 	function formatAction(val,row){
-		return "<a href='javascript:openListActionDialog("+row.id+")'>流程执行过程</a>&nbsp;<a href='javascript:openListCommentDialog("+row.id+")'>历史批注</a>&nbsp;<a target='_blank' href='${pageContext.request.contextPath}/processDefinition/showViewByTaskId.do?taskId="+row.id+"'>查看流程图</a>"
+		return "<a href='#' onclick='javascript:openListActionDialog("+row.id+")'>流程执行过程</a>&nbsp;<a href='#' onclick='javascript:openListCommentDialog("+row.id+")'>历史批注</a>&nbsp;<a target='_blank' href='${pageContext.request.contextPath}/task/showHisCurrentView.do?taskId="+row.id+"'>查看当前流程图</a>"
 	}
-		function openListCommentDialog(taskId){
-		$("#dg2").datagrid("load",{
-			taskId:taskId
-		});
-		$("#dlg2").dialog("open").dialog("setTitle","查看历史批注");
+	
+	function openListCommentDialog(taskId) {
+		var opts = $("#dg2").datagrid("options");
+		opts.url = "${pageContext.request.contextPath}/task/listHistoryComment.action?taskId="
+				+ taskId + "";
+		$("#dg2").datagrid("load");
+		$("#dlg2").dialog("open").dialog("setTitle", "查看历史批注");
 	}
-		function openListActionDialog(taskId){
-		$("#dg3").datagrid("load",{
-			taskId:taskId
-		});
-		$("#dlg3").dialog("open").dialog("setTitle","流程执行过程");
+	
+	function openListActionDialog(taskId) {
+		var opts = $("#dg3").datagrid("options");
+		opts.url = "${pageContext.request.contextPath}/task/listAction.action?taskId="
+				+ taskId + "";
+		$("#dg3").datagrid("load");
+		$("#dlg3").dialog("open").dialog("setTitle", "流程执行过程");
 	}
+
 </script>
 </head>
 <body style="margin: 1px">
-<table id="dg" title="历史任务管理" class="easyui-datagrid"
+<table id="dg" title="已办任务管理" class="easyui-datagrid"
   fitColumns="true" pagination="true" rownumbers="true"
-  url="${pageContext.request.contextPath}/task/finishedList.action?groupId=${currentMemberShip.group.id}" fit="true" toolbar="#tb">
+  url="${pageContext.request.contextPath}/task/finishedList.action?userId=${currentMemberShip.user.id}&status=1" fit="true" toolbar="#tb">
  <thead>
  	<tr>
  		<th field="cb" checkbox="true" align="center"></th>
@@ -58,8 +65,7 @@
 <div id="dlg2" class="easyui-dialog" style="width: 750px;height: 250px;padding: 10px 20px" closed="true" >
  
  	<table id="dg2" title="批注列表" class="easyui-datagrid"
-  fitColumns="true"  
-  url="${pageContext.request.contextPath}/task/listHistoryComment.action" style="width: 700px;height: 200px;">
+  fitColumns="true"  style="width: 700px;height: 200px;">
  <thead>
  	<tr>
  		<th field="time" width="120" align="center">批注时间</th>
@@ -75,8 +81,7 @@
 <div id="dlg3" class="easyui-dialog" style="width: 750px;height: 350px;padding: 10px 20px" closed="true" >
  
  	<table id="dg3" title="流程执行过程列表" class="easyui-datagrid"
-  fitColumns="true"  
-  url="${pageContext.request.contextPath}/task/listAction.action" style="width: 700px;height: 250px;">
+  fitColumns="true"  style="width: 700px;height: 250px;">
  <thead>
  	<tr>
  		<th field="activityId" width="100" align="center">任务节点ID</th>

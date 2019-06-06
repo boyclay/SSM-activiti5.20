@@ -17,6 +17,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		</if>
 	</select>
 	
+	<select id="existGroupName" parameterType="Group" resultType="int" >
+		select count(*) from act_id_group where id_=#{id}
+	</select>
+	
+	
 	<select id="findByUserId" parameterType="String" resultMap="GroupResult">
 		SELECT g.ID_ AS id,g.NAME_ AS NAME FROM act_id_group g LEFT JOIN act_id_membership m ON m.GROUP_ID_=g.ID_ LEFT JOIN act_id_user u ON u.ID_=m.USER_ID_ WHERE u.ID_=#{userId}
 	</select>

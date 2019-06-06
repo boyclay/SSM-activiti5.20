@@ -66,4 +66,12 @@ public class UserServiceImpl implements UserService{
 	public int addUser(User user){
 		return userDao.addUser(user);
 	}
+	@Override
+	public int existUserName(User user) {
+		return userDao.existUserName(user);
+	}
+	@Override
+	public void modifyPassword(User user) {
+		 userDao.modifyPassword(user);
+	}
 }

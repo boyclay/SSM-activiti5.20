@@ -118,8 +118,19 @@ public class ProcessDefinitionController {
 	 * @return
 	 */
 	@RequestMapping("/actProcessDefinition")
-	public void actProcessDefinition(String deploymentId){
-		repositoryService.activateProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+	public String actProcessDefinition(HttpServletResponse response, String deploymentId){
+		
+			JSONObject result = new JSONObject();
+		try {
+			repositoryService.activateProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+			result.put("success", true);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			result.put("success", false);
+		}
+		ResponseUtil.write(response, result);
+		return null;
 	}
 	
 	/**
@@ -129,7 +140,16 @@ public class ProcessDefinitionController {
 	 * @return
 	 */
 	@RequestMapping("/susProcessDefinition")
-	public void susProcessDefinition(String deploymentId){
-		repositoryService.suspendProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+	public String susProcessDefinition(HttpServletResponse response,String deploymentId){
+		JSONObject result = new JSONObject();
+		try {
+			repositoryService.suspendProcessDefinitionById(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
+			result.put("success", true);
+		} catch (Exception e) {
+			e.printStackTrace();
+			result.put("success", false);
+		}
+		ResponseUtil.write(response, result);
+		return null;
 	}
 }

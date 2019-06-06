@@ -182,4 +182,24 @@ public class GroupController {
 			ResponseUtil.write(response, result);
 			return null;
 		}
+		
+		/**
+		 * ÐÂÔöÓÃ‘ô
+		 * 
+		 * @return
+		 * @throws Exception
+		 */
+		@RequestMapping("/existGroupName")
+		public String existGroupName(HttpServletResponse response, Group group) throws Exception {
+			int userResult = groupService.existGroupName(group);
+			JSONObject json = new JSONObject();
+			if (userResult > 0) {
+				json.put("exist", true);
+			} else {
+				json.put("exist", false);
+			}
+			ResponseUtil.write(response, json);
+			return null;
+		}
+		
 }

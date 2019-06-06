@@ -23,18 +23,38 @@
 	}
 	
 	function formatAction(val,row){
-		return "<a href='${pageContext.request.contextPath}/deploy/editorModel?modelId="+row.id+"'>编辑模型</a>&nbsp;<a href='javascript:deployModel("+row.id+")'>部署模型</a>&nbsp;<a href='${pageContext.request.contextPath}/deploy/exportModel?modelId="+row.id+"'>导出模型</a>&nbsp;<a href='javascript:deleteModel("+row.id+")'>删除模型</a>"
+		return "<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='${pageContext.request.contextPath}/deploy/editorModel?modelId="+row.id+"'>编辑模型</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc'  href='javascript:deployModel("+row.id+")'>部署模型</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc'  href='${pageContext.request.contextPath}/deploy/exportModel?modelId="+row.id+"'>导出模型</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc'  href='javascript:deleteModel("+row.id+")'>删除模型</a>"
 	}
 	
 	function deployModel(modelId){
-		$.post("${pageContext.request.contextPath}/deploy/deployModel",{modelId:modelId},function(){
-				$.messager.alert("系统系统"," 部署成功！！！");
+		$.post("${pageContext.request.contextPath}/deploy/deployModel",{modelId:modelId},function(result){
+				if (result.success) {
+					$.messager.alert(
+							"系统提示",
+							"模型部署成功！");
+					$("#dg").datagrid(
+							"reload");
+				} else {
+					$.messager
+							.alert("系统提示",
+									"模型部署失败！");
+				}
 		},"json");
 	}
 	
 	function deleteModel(modelId){
-		$.post("${pageContext.request.contextPath}/deploy/deleteModel",{modelId:modelId},function(){
-				$.messager.alert("系统系统","删除成功！！！");
+		$.post("${pageContext.request.contextPath}/deploy/deleteModel",{modelId:modelId},function(result){
+			if (result.success) {
+				$.messager.alert(
+						"系统提示",
+						"模型删除成功！");
+				$("#dg").datagrid(
+						"reload");
+			} else {
+				$.messager
+						.alert("系统提示",
+								"模型删除失败！");
+			}
 		},"json");
 	}
 	

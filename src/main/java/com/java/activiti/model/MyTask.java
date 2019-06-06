@@ -13,6 +13,8 @@ public class MyTask {
 	private String name; // 任务名称
 	private Date createTime;  // 创建日期
 	private Date endTime; // 结束日期
+	private String owner; // 委托人
+	private String assignee;//代理人
 	
 	public String getId() {
 		return id;
@@ -38,6 +40,16 @@ public class MyTask {
 	public void setEndTime(Date endTime) {
 		this.endTime = endTime;
 	}
-	
-	
+	public String getOwner() {
+		return owner;
+	}
+	public void setOwner(String owner) {
+		this.owner = owner;
+	}
+	public String getAssignee() {
+		return assignee;
+	}
+	public void setAssignee(String assignee) {
+		this.assignee = assignee;
+	}
 }

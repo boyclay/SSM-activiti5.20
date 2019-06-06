@@ -6,13 +6,6 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <title>员工请假流程系统-主页面</title>
-<%
-// 	// 权限验证
-// 	if(session.getAttribute("currentMemberShip")==null){
-// 		response.sendRedirect("login.jsp");
-// 		return;
-// 	}
-%>
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/default/easyui.css">
 <link rel="stylesheet" type="text/css" href="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/themes/icon.css">
 <script type="text/javascript" src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/jquery.min.js"></script>
@@ -23,25 +16,36 @@
 	function openTab(text,url,iconCls){
 		if($("#tabs").tabs("exists",text)){
 			$("#tabs").tabs("select",text);
+			var selTab = $('#tabs').tabs('getSelected');
+	        $('#tabs').tabs('update', {
+	            tab: selTab,
+	            options: {
+	                content:createFrame(url)
+	            }
+	        })
 		}else{
-			var content="<iframe frameborder=0 scrolling='auto' style='width:100%;height:100%' src='${pageContext.request.contextPath}/page/"+url+"'></iframe>";
 			$("#tabs").tabs("add",{
 				title:text,
 				iconCls:iconCls,
 				closable:true,
-				content:content
+				content:createFrame(url)
 			});
 		}
 	}
 	
+
+	function createFrame(url){
+		return "<iframe frameborder=0 scrolling='auto' style='width:100%;height:100%' src='${pageContext.request.contextPath}/user/"+url+".action'></iframe>";
+	}
+	
 	function openPasswordModifyDialog(){
-		url="${pageContext.request.contextPath}/user/modifyPassword.do?id=${currentMemberShip.user.id}";
 		$("#dlg").dialog("open").dialog("setTitle","修改密码");
 	}
 	
 	function modifyPassword(){
+		var newPassword=$("#newPassword").val();
 		$("#fm").form("submit",{
-			url:url,
+			url:"${pageContext.request.contextPath}/user/modifyPassword.do?id=${currentMemberShip.user.id}&password="+newPassword+"",
 			onSubmit:function(){
 				var oldPassword=$("#oldPassword").val();
 				var newPassword=$("#newPassword").val();
@@ -53,6 +57,10 @@
 					$.messager.alert("系统系统","用户原密码输入错误！");
 					return false;
 				}
+				if(oldPassword==newPassword){
+					$.messager.alert("系统系统","新老密码相同,请耐心考虑！");
+					return false;
+				}
 				if(newPassword!=newPassword2){
 					$.messager.alert("系统系统","确认密码输入错误！");
 					return false;
@@ -60,7 +68,7 @@
 				return true;
 			},
 			success:function(result){
-				var result=eval('('+result+')');
+				var result = eval('(' + result + ')');
 				if(result.success){
 					$.messager.alert("系统系统","密码修改成功，下一次登录生效！");
 					resetValue();
@@ -87,7 +95,13 @@
 	function logout(){
 		$.messager.confirm("系统提示","您确定要退出系统吗?",function(r){
 			if(r){
-				window.location.href='${pageContext.request.contextPath}/user/logout.do';
+				$.post("${pageContext.request.contextPath}/user/logout.do",function(result){
+					if(result.success){
+						window.location.href='${pageContext.request.contextPath}/login.jsp';
+					}else{
+						$.messager.alert("系统提示","登出失败，请联系管理员！");
+					}
+				},"json");
 			}
 		});
 	}
@@ -117,27 +131,28 @@
 <div region="west" style="width: 200px;" title="导航菜单" split="true">
 	<div class="easyui-accordion" data-options="fit:true,border:false">
 	    <c:if test="${currentMemberShip.group.name=='管理员' }">
-			<div title="基础数据管理" data-options="selected:true,iconCls:'icon-item'" style="padding: 10px">
-				<a href="javascript:openTab('用户管理','userManage.jsp','icon-user')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-user'" style="width: 150px">用户管理</a>
-				<a href="javascript:openTab('角色管理','groupManage.jsp','icon-role')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-role'" style="width: 150px">角色管理</a>
-				<a href="javascript:openTab('用户权限管理','authManage.jsp','icon-power')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-power'" style="width: 150px">用户权限管理</a>
+			<div title="员工管理" data-options="selected:true,iconCls:'icon-item'" style="padding: 10px">
+				<a href="javascript:openTab('用户管理','userManage','icon-user')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-user'" style="width: 150px">用户管理</a>
+				<a href="javascript:openTab('角色管理','groupManage','icon-role')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-role'" style="width: 150px">角色管理</a>
+				<a href="javascript:openTab('用户权限管理','authManage','icon-power')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-power'" style="width: 150px">用户权限管理</a>
 			</div>
 			<div title="流程管理"  data-options="iconCls:'icon-flow'" style="padding:10px;">
-			<a href="javascript:openTab('流程设计','processDesign.jsp','icon-design')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-design'" style="width: 150px;">流程设计</a>
-				<a href="javascript:openTab('流程部署管理','deployManage.jsp','icon-deploy')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-deploy'" style="width: 150px;">流程部署管理</a>
-				<a href="javascript:openTab('流程定义管理','processDefinitionManage.jsp','icon-definition')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-definition'" style="width: 150px;">流程定义管理</a>
+			<a href="javascript:openTab('流程设计','processDesign','icon-design')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-design'" style="width: 150px;">流程设计</a>
+				<a href="javascript:openTab('流程部署管理','deployManage','icon-deploy')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-deploy'" style="width: 150px;">流程部署管理</a>
+				<a href="javascript:openTab('流程定义管理','processDefinitionManage','icon-definition')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-definition'" style="width: 150px;">流程定义管理</a>
 			</div>
 		</c:if>
 		<c:if test="${currentMemberShip.group.name!='员工'}">
 		<div title="任务管理" data-options="iconCls:'icon-task'" style="padding:10px">
-			<a href="javascript:openTab('待办任务管理','daibanManage.jsp','icon-daiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-daiban'" style="width: 150px;">待办任务管理</a>
-			<a href="javascript:openTab('已办任务管理','yibanManage.jsp','icon-yiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-yiban'" style="width: 150px;">已办任务管理</a>
-			<a href="javascript:openTab('历史任务管理','lishiManage.jsp','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">历史任务管理</a>
+			<a href="javascript:openTab('待办任务管理','daibanManage','icon-daiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-daiban'" style="width: 150px;">待办任务管理</a>
+			<a href="javascript:openTab('已办任务管理','yibanManage','icon-yiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-yiban'" style="width: 150px;">已办任务管理</a>
+			<a href="javascript:openTab('历史任务管理','lishiManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">历史任务管理</a>
+			<a href="javascript:openTab('委派任务管理','deTaskManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">委派任务管理</a>
 		</div>
 		</c:if>
 		<c:if test="${currentMemberShip.group.name=='员工'}">
 			<div title="业务管理"  data-options="iconCls:'icon-yewu'" style="padding:10px">
-				<a href="javascript:openTab('请假申请','leaveManage.jsp','icon-apply')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-apply'" style="width: 150px">请假申请</a>
+				<a href="javascript:openTab('请假申请','leaveManage','icon-apply')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-apply'" style="width: 150px">请假申请</a>
 			</div>
 		</c:if>
 		<div title="系统管理"  data-options="iconCls:'icon-system'" style="padding:10px">
@@ -170,7 +185,7 @@
  				</td>
  			</tr>
  			<tr>
- 				<td>用户名：</td>
+ 				<td>再次输入：</td>
  				<td>
  					<input type="password" id="newPassword2" name="newPassword2" class="easyui-validatebox" required="true" style="width: 200px"/>
  				</td>
