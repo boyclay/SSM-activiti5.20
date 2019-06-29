@@ -41,7 +41,7 @@
 		<property name="realm" ref="userRealm"></property>
 	</bean>
 	
-	<bean id="userRealm" class="com.cityray.filter.UserRealm" />
+	<bean id="userRealm" class="com.java.activiti.shiro.UserRealm" />
 
 	<!-- 配置数据源 -->
 	<bean id="dataSource"
