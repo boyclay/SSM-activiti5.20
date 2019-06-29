@@ -326,9 +326,9 @@
 	        <directory>src/main/resources</directory>  
 	    </resource>  
 	    <resource>  
-	        <directory>src/main/java/activiti/mappers</directory>  
+	        <directory>src/main/java</directory>  
 	        <includes>  
-	            <include>/*.xml</include>  
+	            <include>**/*.xml</include>  
 	        </includes>  
 	        <filtering>true</filtering>  
     </resource>  
