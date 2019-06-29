@@ -1,4 +1,4 @@
- package com.java.activiti.controller;
+package com.java.activiti.controller;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,6 +13,9 @@ import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 
 import org.activiti.engine.IdentityService;
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,7 +48,7 @@ public class UserController {
 
 	@Resource
 	private GroupService groupService;
-	
+
 	@Resource
 	private IdentityService identityService;
 
@@ -65,6 +68,7 @@ public class UserController {
 		map.put("password", request.getParameter("password"));
 		map.put("groupId", request.getParameter("groupId"));
 		MemberShip memberShip = menberShipService.userLogin(map);
+
 		JSONObject result = new JSONObject();
 		if (memberShip == null) {
 			result.put("success", false);
@@ -186,7 +190,7 @@ public class UserController {
 		ResponseUtil.write(response, json);
 		return null;
 	}
-	
+
 	/**
 	 * 新增用戶
 	 * 
@@ -205,7 +209,6 @@ public class UserController {
 		ResponseUtil.write(response, json);
 		return null;
 	}
-	
 
 	@RequestMapping("/listWithGroups")
 	public String listWithGroups(HttpServletResponse response, String rows, String page, User user) throws Exception {
@@ -248,8 +251,7 @@ public class UserController {
 		ResponseUtil.write(response, result);
 		return null;
 	}
-	
-	
+
 	/**
 	 * 修改密码
 	 * 
@@ -269,41 +271,40 @@ public class UserController {
 		ResponseUtil.write(response, json);
 		return null;
 	}
-	
-	
+
 	/**
-	 *  组查用户
+	 * 组查用户
 	 * 
 	 * @return
 	 * @throws Exception
 	 */
 	@RequestMapping("/getUserByGoupId")
-	public String getUserByGoupId(HttpServletResponse response,String groupId) throws Exception {
-		List<org.activiti.engine.identity.User> userList = identityService.createUserQuery().memberOfGroup(groupId).list();
-		JSONArray jsonArray=new JSONArray();
-		//将list转为JSON
-		JSONArray rows=JSONArray.fromObject(userList);
+	public String getUserByGoupId(HttpServletResponse response, String groupId) throws Exception {
+		List<org.activiti.engine.identity.User> userList = identityService.createUserQuery().memberOfGroup(groupId)
+				.list();
+		JSONArray jsonArray = new JSONArray();
+		// 将list转为JSON
+		JSONArray rows = JSONArray.fromObject(userList);
 		jsonArray.addAll(rows);
 		ResponseUtil.write(response, jsonArray);
 		return null;
 	}
 
-
-	/**
-	 * 登出
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	@RequestMapping("/logout")
-	@ResponseBody
-	public String logout(HttpServletResponse response, HttpServletRequest request) {
-		request.getSession().removeAttribute("currentMemberShip");
-		JSONObject json = new JSONObject();
-		json.put("success", true);
-		ResponseUtil.write(response, json);
-		return null;
-	}
+//	/**
+//	 * 登出
+//	 * 
+//	 * @return
+//	 * @throws Exception
+//	 */
+//	@RequestMapping("/logout")
+//	@ResponseBody
+//	public String logout(HttpServletResponse response, HttpServletRequest request) {
+//		request.getSession().removeAttribute("currentMemberShip");
+//		JSONObject json = new JSONObject();
+//		json.put("success", true);
+//		ResponseUtil.write(response, json);
+//		return null;
+//	}
 
 	/**
 	 * 主页面
@@ -360,13 +361,29 @@ public class UserController {
 		return "page/lishiManage";
 	}
 
-	@RequestMapping("/leaveManage")
-	public String leaveManage() {
-		return "page/leaveManage";
-	}
-	
 	@RequestMapping("/deTaskManage")
 	public String deTaskManage() {
 		return "page/deTaskManage";
 	}
+
+	@RequestMapping("/leaveManage")
+	public String leaveManage() {
+		return "page/leaveManage";
+	}
+
+	@RequestMapping("/assignTaskManage")
+	public String assignTaskManage() {
+		return "page/assignTaskManage";
+	}
+
+	@RequestMapping("/claimTaskManage")
+	public String claimTaskManage() {
+		return "page/claimTaskManage";
+	}
+	
+	@RequestMapping("/ceshi")
+	public String ceshi() {
+		return "page/ceshi";
+	}
+
 }

@@ -10,9 +10,39 @@
         http://www.springframework.org/schema/jee http://www.springframework.org/schema/jee/spring-jee-4.0.xsd  
         http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd">
 
-
 	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
 	
+	<!-- shiro -->
+	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+		<property name="securityManager" ref="securityManager" />
+		<property name="loginUrl" value="login.jsp" />
+		<property name="filters">
+			<map>
+				<!--退出过滤器 -->
+				<entry key="logout" value-ref="systemLogoutFilter" />
+			</map>
+		</property>
+		<property name="filterChainDefinitions">
+			<value>
+				/login.jsp = anon
+				/user/userLogin.action = anon
+				/group/findGroup.action = anon
+				/user/logout.do = logout
+				/* = authc
+			</value>
+		</property>
+	</bean>
+
+	<bean id="systemLogoutFilter" class="com.java.activiti.shiro.SystemLogoutFilter">
+		<property name="redirectUrl" value="ceshi" />
+	</bean>
+
+	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<property name="realm" ref="userRealm"></property>
+	</bean>
+	
+	<bean id="userRealm" class="com.cityray.filter.UserRealm" />
+
 	<!-- 配置数据源 -->
 	<bean id="dataSource"
 		class="org.springframework.jdbc.datasource.DriverManagerDataSource">

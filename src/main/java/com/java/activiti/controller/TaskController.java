@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -15,8 +16,12 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.activiti.bpmn.model.BpmnModel;
+import org.activiti.bpmn.model.ExtensionAttribute;
+import org.activiti.bpmn.model.ExtensionElement;
+import org.activiti.bpmn.model.FlowElement;
 import org.activiti.bpmn.model.FlowNode;
 import org.activiti.bpmn.model.SequenceFlow;
+import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.ProcessEngineConfiguration;
@@ -42,6 +47,7 @@ import org.activiti.engine.impl.pvm.process.TransitionImpl;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Comment;
+import org.activiti.engine.task.DelegationState;
 import org.activiti.engine.task.Task;
 import org.activiti.image.ProcessDiagramGenerator;
 import org.springframework.stereotype.Controller;
@@ -602,9 +608,7 @@ public class TaskController {
 		}
 		return highFlows;
 	}
-	
-	
-	
+
 	/**
 	 * 委派任务
 	 * 
@@ -615,11 +619,13 @@ public class TaskController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/delegateTask")
-	public String delegateTask(HttpServletResponse response, String userId,String taskId)
-			throws Exception {
-		JSONObject result=new JSONObject();
+	public String delegateTask(HttpServletResponse response, String userId, String taskId,String comment,HttpSession session) throws Exception {
+		JSONObject result = new JSONObject();
 		try {
-			taskService.delegateTask(taskId,userId);
+			taskService.delegateTask(taskId, userId);
+			Authentication.setAuthenticatedUserId(((MemberShip) session.getAttribute("currentMemberShip")).getUser().getFirstName()
+					+ ((MemberShip) session.getAttribute("currentMemberShip")).getUser().getLastName() + "[" + ((MemberShip) session.getAttribute("currentMemberShip")).getGroup().getName() + "]");
+			taskService.addComment(taskId, taskService.createTaskQuery().taskId(taskId).singleResult().getProcessInstanceId(), comment);
 			result.put("success", true);
 		} catch (Exception e) {
 			result.put("success", false);
@@ -628,8 +634,7 @@ public class TaskController {
 		ResponseUtil.write(response, result);
 		return null;
 	}
-	
-	
+
 	/**
 	 * 委派流程分页查询
 	 * 
@@ -660,9 +665,11 @@ public class TaskController {
 		pageInfo.setPageIndex((Integer.parseInt(page) - 1) * pageInfo.getPageSize());
 		// 获取总记录数
 		System.out.println("用户ID：" + userId + "\n" + "名称:" + s_name);
-		long total = taskService.createTaskQuery().taskAssignee(userId).taskNameLike("%" + s_name + "%").count(); // 获取总记录数
+		long total = taskService.createTaskQuery().taskOwner(userId).deploymentId("PENDING")
+				.taskNameLike("%" + s_name + "%").count(); // 获取总记录数
 		// 有想法的话，可以去数据库观察 ACT_RU_TASK 的变化
-		List<Task> taskList = taskService.createTaskQuery().taskOwner(userId).taskNameLike("%" + s_name + "%").listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+		List<Task> taskList = taskService.createTaskQuery().taskOwner(userId).taskNameLike("%" + s_name + "%")
+				.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
 		List<MyTask> MyTaskList = new ArrayList<MyTask>();
 		for (Task t : taskList) {
 			MyTask myTask = new MyTask();
@@ -679,6 +686,293 @@ public class TaskController {
 		JSONArray jsonArray = JSONArray.fromObject(MyTaskList, jsonConfig);
 		result.put("rows", jsonArray);
 		result.put("total", total);
+		ResponseUtil.write(response, result);
+		return null;
+	}
+
+	/**
+	 * 转办任务
+	 * 
+	 * @param response
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/transferTask")
+	public String transferTask(HttpServletResponse response, String userId, String taskId,String comment,HttpSession session) throws Exception {
+		JSONObject result = new JSONObject();
+		try {
+			taskService.setAssignee(taskId, userId);
+			Authentication.setAuthenticatedUserId(((MemberShip) session.getAttribute("currentMemberShip")).getUser().getFirstName()
+					+ ((MemberShip) session.getAttribute("currentMemberShip")).getUser().getLastName() + "[" + ((MemberShip) session.getAttribute("currentMemberShip")).getGroup().getName() + "]");
+			taskService.addComment(taskId, taskService.createTaskQuery().taskId(taskId).singleResult().getProcessInstanceId(), comment);
+			result.put("success", true);
+		} catch (Exception e) {
+			result.put("success", false);
+			e.printStackTrace();
+		}
+		ResponseUtil.write(response, result);
+		return null;
+	}
+
+	/**
+	 * 指派流程分页查询
+	 * 
+	 * @param response
+	 * @param page
+	 *            当前页数
+	 * @param rows
+	 *            每页显示页数
+	 * @param s_name
+	 *            流程名称
+	 * @param userId
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/assignTaskPage")
+	public String assignTaskPage(HttpServletResponse response, String page, String rows, String s_name, String userId)
+			throws Exception {
+		if (s_name == null) {
+			s_name = "";
+		}
+		PageInfo pageInfo = new PageInfo();
+		Integer pageSize = Integer.parseInt(rows);
+		pageInfo.setPageSize(pageSize);
+		if (page == null || page.equals("")) {
+			page = "1";
+		}
+		pageInfo.setPageIndex((Integer.parseInt(page) - 1) * pageInfo.getPageSize());
+		// 获取总记录数
+		System.out.println("用户ID：" + userId + "\n" + "名称:" + s_name);
+		long total = taskService.createTaskQuery().taskAssignee(userId).taskDelegationState(DelegationState.PENDING)
+				.taskNameLike("%" + s_name + "%").count(); // 获取总记录数
+		// 有想法的话，可以去数据库观察 ACT_RU_TASK 的变化
+		List<Task> taskList = taskService.createTaskQuery().taskAssignee(userId)
+				.taskDelegationState(DelegationState.PENDING).taskNameLike("%" + s_name + "%")
+				.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+		List<MyTask> MyTaskList = new ArrayList<MyTask>();
+		for (Task t : taskList) {
+			MyTask myTask = new MyTask();
+			myTask.setId(t.getId());
+			myTask.setName(t.getName());
+			myTask.setCreateTime(t.getCreateTime());
+			myTask.setAssignee(t.getAssignee());
+			myTask.setOwner(t.getOwner());
+			MyTaskList.add(myTask);
+		}
+		JsonConfig jsonConfig = new JsonConfig();
+		jsonConfig.registerJsonValueProcessor(java.util.Date.class, new DateJsonValueProcessor("yyyy-MM-dd hh:mm:ss"));
+		JSONObject result = new JSONObject();
+		JSONArray jsonArray = JSONArray.fromObject(MyTaskList, jsonConfig);
+		result.put("rows", jsonArray);
+		result.put("total", total);
+		ResponseUtil.write(response, result);
+		return null;
+	}
+
+	/**
+	 * 转办任务完成
+	 * 
+	 * @param response
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/resolveTask")
+	public String resolveTask(String taskId, Integer leaveDays, String comment, Integer state,
+			HttpServletResponse response, HttpSession session) throws Exception {
+		// 首先根据ID查询任务
+		Task task = taskService.createTaskQuery() // 创建任务查询
+				.taskId(taskId) // 根据任务id查询
+				.singleResult();
+		Map<String, Object> variables = new HashMap<String, Object>();
+		// 取得角色用户登入的session对象
+		MemberShip currentMemberShip = (MemberShip) session.getAttribute("currentMemberShip");
+		// 设置流程变量
+		variables.put("dasy", leaveDays);
+		// 获取流程实例id
+		String processInstanceId = task.getProcessInstanceId();
+		// 设置用户id
+		Authentication.setAuthenticatedUserId(currentMemberShip.getUser().getFirstName()
+				+ currentMemberShip.getUser().getLastName() + "[" + currentMemberShip.getGroup().getName() + "]");
+		// 添加批注信息
+		taskService.addComment(taskId, processInstanceId, comment);
+		JSONObject result = new JSONObject();
+		try {
+			taskService.resolveTask(taskId);
+			result.put("success", true);
+		} catch (Exception e) {
+			result.put("success", false);
+			e.printStackTrace();
+		}
+		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	
+	/**
+	 * 获取所有的任务节点
+	 * 
+	 * @param response
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/getAllUserTask")
+	public String getAllUserTask(String taskId,HttpServletResponse response) throws Exception {
+		// 首先根据ID查询任务
+		Task task = taskService.createTaskQuery() // 创建任务查询
+				.taskId(taskId) // 根据任务id查询
+				.singleResult();
+		BpmnModel bpmnModel = repositoryService.getBpmnModel(task.getProcessDefinitionId());
+		Collection<FlowElement> flowElementList = bpmnModel.getProcesses().get(0).getFlowElements();
+		List<UserTask> userTaskList = new ArrayList<>();
+		for (FlowElement flowElement : flowElementList) {
+			if (flowElement instanceof UserTask) {
+				userTaskList.add((UserTask)flowElement);
+			}
+		}
+		JSONArray jsonArray=new JSONArray();
+		//将list转为JSON
+		JSONArray rows=JSONArray.fromObject(userTaskList);
+		jsonArray.addAll(rows);
+		ResponseUtil.write(response, jsonArray);
+		return null;
+	}
+	
+	/**
+	 * 任意节点驳回
+	 * 
+	 * @param response
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/anyRebut")
+	public String anyRebut(String id,String taskId,String comment,HttpServletResponse response,HttpSession session) throws Exception {
+		
+		JSONObject result = new JSONObject();
+		try {
+			// 首先根据ID查询任务
+			Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+			ProcessDefinitionEntity definition = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
+					.getDeployedProcessDefinition(task.getProcessDefinitionId());
+			ActivityImpl currActivity = ((ProcessDefinitionImpl) definition).findActivity(task.getTaskDefinitionKey());
+			List<PvmTransition> nextTransitionList = currActivity.getIncomingTransitions();// 获取流出方向
+			// 清除当前活动的出口
+			List<PvmTransition> oriPvmTransitionList = new ArrayList<PvmTransition>();
+			List<PvmTransition> pvmTransitionList = currActivity.getOutgoingTransitions();// 获取流入方向
+			for (PvmTransition pvmTransition : pvmTransitionList) {
+				oriPvmTransitionList.add(pvmTransition);
+			}
+			pvmTransitionList.clear();
+			// 建立新出口
+			List<TransitionImpl> newTransitions = new ArrayList<TransitionImpl>();
+			for (PvmTransition nextTransition : nextTransitionList) {
+				ActivityImpl nextActivityImpl = ((ProcessDefinitionImpl) definition).findActivity(id);
+					TransitionImpl newTransition = currActivity.createOutgoingTransition();
+					newTransition.setDestination(nextActivityImpl);
+					newTransitions.add(newTransition);
+			}
+			Authentication.setAuthenticatedUserId(((MemberShip) session.getAttribute("currentMemberShip")).getUser().getFirstName()
+					+ ((MemberShip) session.getAttribute("currentMemberShip")).getUser().getLastName() + "[" + ((MemberShip) session.getAttribute("currentMemberShip")).getGroup().getName() + "]");
+			taskService.addComment(taskId, taskService.createTaskQuery().taskId(taskId).singleResult().getProcessInstanceId(), comment);
+			taskService.complete(task.getId());// 驳回新建的方向连接线是没有判定的
+			// 恢复方向
+			for (TransitionImpl transitionImpl : newTransitions) {
+				currActivity.getOutgoingTransitions().remove(transitionImpl);
+				transitionImpl.getDestination().getIncomingTransitions().remove(transitionImpl);
+			}
+			for (PvmTransition pvmTransition : oriPvmTransitionList) {
+				pvmTransitionList.add(pvmTransition);
+			}
+			result.put("success", true);
+		} catch (Exception e1) {
+			result.put("success", false);
+			e1.printStackTrace();
+		}
+		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	
+	/**
+	 * 签收任务列表
+	 * 
+	 * @param response
+	 * @param page
+	 *            当前页数
+	 * @param rows
+	 *            每页显示页数
+	 * @param s_name
+	 *            流程名称
+	 * @param userId
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/claimTaskPage")
+	public String claimTaskPage(HttpServletResponse response, String page, String rows, String s_name, String userId)
+			throws Exception {
+		if (s_name == null) {
+			s_name = "";
+		}
+		PageInfo pageInfo = new PageInfo();
+		Integer pageSize = Integer.parseInt(rows);
+		pageInfo.setPageSize(pageSize);
+		if (page == null || page.equals("")) {
+			page = "1";
+		}
+		pageInfo.setPageIndex((Integer.parseInt(page) - 1) * pageInfo.getPageSize());
+		// 获取总记录数
+		System.out.println("用户ID：" + userId + "\n" + "名称:" + s_name);
+		long total = taskService.createTaskQuery().taskCandidateUser(userId)
+				.taskNameLike("%" + s_name + "%").count(); // 获取总记录数
+		// 有想法的话，可以去数据库观察 ACT_RU_TASK 的变化
+		List<Task> taskList = taskService.createTaskQuery().taskCandidateUser(userId).taskNameLike("%" + s_name + "%")
+				.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+		List<MyTask> MyTaskList = new ArrayList<MyTask>();
+		for (Task t : taskList) {
+			MyTask myTask = new MyTask();
+			myTask.setId(t.getId());
+			myTask.setName(t.getName());
+			myTask.setCreateTime(t.getCreateTime());
+			myTask.setAssignee(t.getAssignee());
+			myTask.setOwner(t.getOwner());
+			MyTaskList.add(myTask);
+		}
+		JsonConfig jsonConfig = new JsonConfig();
+		jsonConfig.registerJsonValueProcessor(java.util.Date.class, new DateJsonValueProcessor("yyyy-MM-dd hh:mm:ss"));
+		JSONObject result = new JSONObject();
+		JSONArray jsonArray = JSONArray.fromObject(MyTaskList, jsonConfig);
+		result.put("rows", jsonArray);
+		result.put("total", total);
+		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	
+	/**
+	 * 签收任务
+	 * 
+	 * @param response
+	 * @param userId
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/claimTask")
+	public String claimTask(HttpServletResponse response,String taskId,String userId)
+			throws Exception {
+		JSONObject result = new JSONObject();
+		try {
+			taskService.claim(taskId, userId);
+			result.put("success", true);
+		} catch (Exception e) {
+			result.put("success", false);
+			e.printStackTrace();
+		}
 		ResponseUtil.write(response, result);
 		return null;
 	}

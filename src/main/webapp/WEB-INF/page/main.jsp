@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
+<%@ taglib prefix="shiro" uri="http://shiro.apache.org/tags" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -144,10 +145,12 @@
 		</c:if>
 		<c:if test="${currentMemberShip.group.name!='员工'}">
 		<div title="任务管理" data-options="iconCls:'icon-task'" style="padding:10px">
+			<a href="javascript:openTab('签收任务管理','claimTaskManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">签收任务管理</a>
 			<a href="javascript:openTab('待办任务管理','daibanManage','icon-daiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-daiban'" style="width: 150px;">待办任务管理</a>
 			<a href="javascript:openTab('已办任务管理','yibanManage','icon-yiban')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-yiban'" style="width: 150px;">已办任务管理</a>
 			<a href="javascript:openTab('历史任务管理','lishiManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">历史任务管理</a>
 			<a href="javascript:openTab('委派任务管理','deTaskManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">委派任务管理</a>
+			<a href="javascript:openTab('指派任务管理','assignTaskManage','icon-lishi')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-lishi'" style="width: 150px;">指派任务管理</a>
 		</div>
 		</c:if>
 		<c:if test="${currentMemberShip.group.name=='员工'}">

@@ -31,23 +31,30 @@
 				+ row.id + "'>查看当前流程图</a>"
 	}
 
-	function changeScenes() {
+	$(function(){
 		$('#groupId')
-				.combobox(
-						{
-							onSelect : function(row) {
-								$('#userId')
-										.combobox(
-												{
-													url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
-														 	+ row.id+"",
-															 formatter: function(row){
-															return '<span class="item-text">'+row.firstName+row.lastName+'</span>'; 
-															 }
-												});
-							}
-						});
-	}
+		.combobox(
+				{
+					onShowPanel : function(){
+						       $(this).combobox('options').url= "${pageContext.request.contextPath}/group/findGroup.action";
+						       $(this).combobox('reload');
+					},
+					onSelect : function(row) {
+						$('#userId')
+								.combobox(
+										{
+											url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
+													+ row.id + "",
+											formatter : function(row) {
+												return '<span class="item-text">'
+														+ row.firstName
+														+ row.lastName
+														+ '</span>';
+											}
+										});
+					},
+				});
+	})
 
 	function openDelegateTaskTab(taskId) {
 		$("#detaskId").val(taskId);
@@ -220,7 +227,7 @@
 				<tr>
 					<td>委派組：</td>
 					<td><input id="groupId" name="groupId" class="easyui-combobox"
-						data-options="panelHeight:'auto',valueField:'id',textField:'name',url:'${pageContext.request.contextPath}/group/findGroup.action' ,onSelect:function(){changeScenes();}"
+						data-options="panelHeight:'auto',valueField:'id',textField:'name'"
 						value="请选择" /></td>
 				</tr>
 				<tr>

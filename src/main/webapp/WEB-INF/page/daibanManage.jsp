@@ -22,10 +22,15 @@
 			"s_name" : $("#s_name").val()
 		});
 	}
+
 	function formatAction(val, row) {
-		return "<a href='javascript:openDelegateTaskTab("
+		return "<a href='javascript:openTransferTaskTab("
 				+ row.id
-				+ ")'>委派任务</a>&nbsp;<a href='javascript:openFinishTaskTab("
+				+ ")'>转办</a>&nbsp;<a href='javascript:openDelegateTaskTab("
+				+ row.id
+				+ ")'>委派</a>&nbsp;<a href='javascript:openRebutTaskTab("
+				+ row.id
+				+ ")'>驳回</a>&nbsp;<a href='javascript:openFinishTaskTab("
 				+ row.id
 				+ ")'>办理任务</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:openListCommentDialog("
 				+ row.id
@@ -33,27 +38,85 @@
 				+ row.id + "'>查看当前流程图</a>"
 	}
 
-	function changeScenes() {
+	$(function(){
+		$('#tgroupId')
+		.combobox(
+				{
+					onShowPanel : function(){
+						       $(this).combobox('options').url= "${pageContext.request.contextPath}/group/findGroup.action";
+						       $(this).combobox('reload');
+					},
+					onSelect : function(row) {
+						$('#tuserId')
+								.combobox(
+										{
+											url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
+													+ row.id + "",
+											formatter : function(row) {
+												return '<span class="item-text">'
+														+ row.firstName
+														+ row.lastName
+														+ '</span>';
+											}
+										});
+					},
+				});
+		
 		$('#groupId')
-				.combobox(
-						{
-							onSelect : function(row) {
-								$('#userId')
-										.combobox(
-												{
-													url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
-															+ row.id+"",
-															 formatter: function(row){
-															return '<span class="item-text">'+row.firstName+row.lastName+'</span>'; 
-															 }
-												});
-							}
-						});
-	}
-
+		.combobox(
+				{
+					onShowPanel : function(){
+						       $(this).combobox('options').url= "${pageContext.request.contextPath}/group/findGroup.action";
+						       $(this).combobox('reload');
+					},
+					onSelect : function(row) {
+						$('#userId')
+								.combobox(
+										{
+											url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
+													+ row.id + "",
+											formatter : function(row) {
+												return '<span class="item-text">'
+														+ row.firstName
+														+ row.lastName
+														+ '</span>';
+											}
+										});
+					},
+				});
+		
+		$('#rTaskId')
+		.combobox(
+				{
+					formatter : function(row) {
+						return '<span class="item-text">'
+								+ row.name
+								+ '</span>';
+					},
+					onShowPanel : function(){
+							   var rebutTaskId = $("#rebutTaskId").val();
+						       $(this).combobox('options').url= "${pageContext.request.contextPath}/task/getAllUserTask.action?taskId="+rebutTaskId;
+						       $(this).combobox('reload');
+					},
+				});
+		
+		
+		
+	})
+	
 	function openDelegateTaskTab(taskId) {
 		$("#dlg4").dialog("open").dialog("setTitle", "添加委派信息");
 		$("#detaskId").val(taskId);
+	}
+
+	function openTransferTaskTab(taskId) {
+		$("#dlg5").dialog("open").dialog("setTitle", "添加转办信息");
+		$("#tdetaskId").val(taskId);
+	}
+
+	function openRebutTaskTab(taskId) {
+		$("#dlg6").dialog("open").dialog("setTitle", "添加驳回信息");
+		$("#rebutTaskId").val(taskId);
 	}
 
 	function openListCommentDialog(taskId) {
@@ -62,6 +125,16 @@
 				+ taskId + "";
 		$("#dg2").datagrid("load");
 		$("#dlg2").dialog("open").dialog("setTitle", "查看历史批注");
+	}
+	
+	function closeDialog4() {
+		$("#dlg4").dialog("close");
+	}
+	function closeDialog5() {
+		$("#dlg5").dialog("close");
+	}
+	function closeDialog6() {
+		$("#dlg6").dialog("close");
 	}
 
 	function openFinishTaskTab(taskId) {
@@ -92,7 +165,7 @@
 							success : function(result) {
 								var result = eval('(' + result + ')');
 								if (result.success) {
-									$.messager.alert("系统系统", "委派成功！");
+									$.messager.alert("系统系统", "操作成功！");
 									$("#dlg3").dialog("close");
 									$("#dg").datagrid("reload");
 								} else {
@@ -102,35 +175,96 @@
 							}
 						});
 	}
-	
+
 	function saveLeave() {
-		$("#gfm").form("submit", {
-			url : '${pageContext.request.contextPath}/task/delegateTask.action',
-			onSubmit : function() {
-				if($("#groupId").combobox("getValue")=="请选择"){
-					$.messager.alert("系统提示","请选择组！");
-					return false;
-				}
-				if($("#userId").combobox("getValue")=="请选择"){
-					$.messager.alert("系统提示","请选择用户！");
-					return false;
-				}
-				return $(this).form("validate");
-			},
-			success : function(result) {
-				var result = eval('(' + result + ')');
-				if (result.success) {
-					$.messager.alert("系统系统", "保存成功！");
-					$("#dlg4").dialog("close");
-					$("#dg").datagrid("reload");
-				} else {
-					$.messager.alert("系统系统", "保存失败！");
-					return;
-				}
-			}
-		});
+		$("#gfm")
+				.form(
+						"submit",
+						{
+							url : '${pageContext.request.contextPath}/task/delegateTask.action',
+							onSubmit : function() {
+								if ($("#groupId").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择组！");
+									return false;
+								}
+								if ($("#userId").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择用户！");
+									return false;
+								}
+								return $(this).form("validate");
+							},
+							success : function(result) {
+								var result = eval('(' + result + ')');
+								if (result.success) {
+									$.messager.alert("系统系统", "委派成功！");
+									$("#dlg4").dialog("close");
+									$("#dg").datagrid("reload");
+								} else {
+									$.messager.alert("系统系统", "委派失败！");
+									return;
+								}
+							}
+						});
 	}
 
+	function saveTransfer() {
+		$("#tfm")
+				.form(
+						"submit",
+						{
+							url : '${pageContext.request.contextPath}/task/transferTask.action',
+							onSubmit : function() {
+								if ($("#tgroupId").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择组！");
+									return false;
+								}
+								if ($("#tuserId").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择用户！");
+									return false;
+								}
+								return $(this).form("validate");
+							},
+							success : function(result) {
+								var result = eval('(' + result + ')');
+								if (result.success) {
+									$.messager.alert("系统系统", "转办成功！");
+									$("#dlg5").dialog("close");
+									$("#dg").datagrid("reload");
+								} else {
+									$.messager.alert("系统系统", "转办失败！");
+									return;
+								}
+							}
+	});
+	}
+	
+	function saveRebuts() {
+		$("#rfm")
+				.form(
+						"submit",
+						{
+							url : '${pageContext.request.contextPath}/task/anyRebut.action',
+							onSubmit : function() {
+								if ($("#rTaskId").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择用户节点！");
+									return false;
+								}
+								return $(this).form("validate");
+							},
+							success : function(result) {
+								var result = eval('(' + result + ')');
+								if (result.success) {
+									$.messager.alert("系统系统", "驳回成功！");
+									$("#dlg6").dialog("close");
+									$("#dg").datagrid("reload");
+								} else {
+									$.messager.alert("系统系统", "驳回失败！");
+									return;
+								}
+							}
+	});
+	}
+	
 </script>
 </head>
 <body style="margin: 1px">
@@ -219,15 +353,20 @@
 				<tr>
 					<td>委派組：</td>
 					<td><input id="groupId" name="groupId" class="easyui-combobox"
-						data-options="panelHeight:'auto',valueField:'id',textField:'name',url:'${pageContext.request.contextPath}/group/findGroup.action' ,onSelect:function(){changeScenes();}"
+												data-options="panelHeight:'auto',valueField:'id',textField:'name'" 
 						value="请选择" /></td>
 				</tr>
 				<tr>
 					<td>委派人：</td>
-					<td><input id="userId" name="userId"
-						class="easyui-combobox"
+					<td><input id="userId" name="userId" class="easyui-combobox"
 						data-options="panelHeight:'auto',valueField:'id',textField:'id' "
 						value="请选择" /></td>
+				</tr>
+				<tr>
+					<td valign="top">批注：</td>
+					<td colspan="4"><textarea id="comment" name="comment" rows="2"
+							cols="49" class="easyui-validatebox" required="true"></textarea>
+					</td>
 				</tr>
 				<td><input id="detaskId" type="hidden" name="taskId" /></td>
 			</table>
@@ -236,9 +375,74 @@
 
 	<div id="dlg-buttons">
 		<a href="javascript:saveLeave()" class="easyui-linkbutton"
-			iconCls="icon-ok">保存</a> <a href="javascript:closeLeaveDialog()"
+			iconCls="icon-ok">保存</a> <a href="javascript:closeDialog4()"
 			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
 	</div>
 
+
+	<div id="dlg5" class="easyui-dialog"
+		style="width: 620px; height: 280px; padding: 10px 20px" closed="true"
+		buttons="#dlg-buttons">
+
+		<form id="tfm" method="post">
+			<table cellpadding="8px">
+				<tr>
+					<td>处理組：</td>
+					<td><input id="tgroupId" name="groupId"
+						class="easyui-combobox"
+						data-options="panelHeight:'auto',valueField:'id',textField:'name'"
+						value="请选择" /></td>
+				</tr>
+				<tr>
+					<td>处理人：</td>
+					<td><input id="tuserId" name="userId" class="easyui-combobox"
+						data-options="panelHeight:'auto',valueField:'id',textField:'id' "
+						value="请选择" /></td>
+				</tr>
+				<tr>
+					<td valign="top">批注：</td>
+					<td colspan="4"><textarea id="comment" name="comment" rows="2"
+							cols="49" class="easyui-validatebox" required="true"></textarea>
+					</td>
+				</tr>
+				<td><input id="tdetaskId" type="hidden" name="taskId" /></td>
+			</table>
+		</form>
+	</div>
+
+	<div id="dlg-buttons">
+		<a href="javascript:saveTransfer()" class="easyui-linkbutton"
+			iconCls="icon-ok">保存</a> <a href="javascript:closeDialog5()"
+			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
+
+	<div id="dlg6" class="easyui-dialog"
+		style="width: 620px; height: 280px; padding: 10px 20px" closed="true"
+		buttons="#dlg-buttons">
+
+		<form id="rfm" method="post">
+			<table cellpadding="8px">
+				<tr>
+					<td>驳回节点：</td>
+					<td><input id="rTaskId" name="id" class="easyui-combobox"
+						data-options="panelHeight:'auto',valueField:'id',textField:'name' "
+						value="请选择" /></td>
+				</tr>
+				<tr>
+					<td valign="top">批注：</td>
+					<td colspan="4"><textarea id="comment" name="comment" rows="2"
+							cols="49" class="easyui-validatebox" required="true"></textarea>
+					</td>
+				</tr>
+				<td><input id="rebutTaskId" type="hidden" name="taskId" /></td>
+			</table>
+		</form>
+	</div>
+
+	<div id="dlg-buttons">
+		<a href="javascript:saveRebuts()" class="easyui-linkbutton"
+			iconCls="icon-ok">驳回</a> <a href="javascript:closeDialog6()"
+			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
 </body>
 </html>
