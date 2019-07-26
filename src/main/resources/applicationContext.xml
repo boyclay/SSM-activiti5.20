@@ -35,7 +35,7 @@
 	</bean>
 
 	<bean id="systemLogoutFilter" class="com.java.activiti.shiro.SystemLogoutFilter">
-		<property name="redirectUrl" value="ceshi" />
+		<property name="redirectUrl" value="redirectUrlLogin" />
 	</bean>
 
 	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">

@@ -87,9 +87,10 @@
 	}
 
 	function openUserAddDiglog() {
-		$("#dlg").dialog("open").dialog("setTitle", "添加用户信息");
-		$("#flag").val(1);
-		$("#id").attr("readonly", false);
+		$("#dlg").window("open");
+// 		$("#dlg").dialog("open").dialog("setTitle", "添加用户信息");
+// 		$("#flag").val(1);
+// 		$("#id").attr("readonly", false);
 	}
 
 	function openUserModifyDiglog() {
@@ -220,7 +221,7 @@
 		</div>
 	</div>
 
-	<div id="dlg" class="easyui-dialog"
+	<div id="dlg" class="easyui-window"
 		style="width: 620px; height: 250px; padding: 10px 20px" closed="true"
 		buttons="#dlg-buttons">
 

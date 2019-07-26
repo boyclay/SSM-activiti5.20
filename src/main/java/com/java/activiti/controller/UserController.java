@@ -381,9 +381,19 @@ public class UserController {
 		return "page/claimTaskManage";
 	}
 	
-	@RequestMapping("/ceshi")
-	public String ceshi() {
-		return "page/ceshi";
+	@RequestMapping("/logout")
+	public String logout(HttpServletResponse response, HttpServletRequest request) {
+		JSONObject json = new JSONObject();
+		json.put("success", true);
+		ResponseUtil.write(response, json);
+		return null;
+	}
+	@RequestMapping("/redirectUrlLogin")
+	public String redirectUrlLogin(HttpServletResponse response, HttpServletRequest request) {
+		JSONObject json = new JSONObject();
+		json.put("success", true);
+		ResponseUtil.write(response, json);
+		return null;
 	}
 
 }
