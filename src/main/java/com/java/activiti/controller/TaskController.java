@@ -32,6 +32,8 @@ import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.HistoricActivityInstance;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.impl.AbstractQuery;
+import org.activiti.engine.impl.HistoricActivityInstanceQueryProperty;
 import org.activiti.engine.impl.RepositoryServiceImpl;
 import org.activiti.engine.impl.bpmn.behavior.ExclusiveGatewayActivityBehavior;
 import org.activiti.engine.impl.bpmn.behavior.MultiInstanceActivityBehavior;
@@ -45,15 +47,18 @@ import org.activiti.engine.impl.pvm.process.ActivityImpl;
 import org.activiti.engine.impl.pvm.process.ProcessDefinitionImpl;
 import org.activiti.engine.impl.pvm.process.TransitionImpl;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.Execution;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Comment;
 import org.activiti.engine.task.DelegationState;
 import org.activiti.engine.task.Task;
 import org.activiti.image.ProcessDiagramGenerator;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.java.activiti.convertor.CustomProcessDiagramGenerator;
 import com.java.activiti.model.Leave;
 import com.java.activiti.model.MemberShip;
 import com.java.activiti.model.MyTask;
@@ -327,6 +332,9 @@ public class TaskController {
 	@RequestMapping("/audit_bz")
 	public String audit_bz(String taskId, Integer leaveDays, String comment, Integer state,
 			HttpServletResponse response, HttpSession session) throws Exception {
+		/*
+		 * 委派的任务不能解决
+		 */
 		// 首先根据ID查询任务
 		Task task = taskService.createTaskQuery() // 创建任务查询
 				.taskId(taskId) // 根据任务id查询
@@ -541,20 +549,154 @@ public class TaskController {
 		ProcessDefinitionEntity definitionEntity = (ProcessDefinitionEntity) repositoryService
 				.getProcessDefinition(processDefinitionId);
 
-		List<String> highLightedFlows = getHighLightedFlows(model, definitionEntity, highLightedActivitList);
-		ProcessDiagramGenerator diagramGenerator = processEngineConfiguration.getProcessDiagramGenerator();
-		// 第三个参数控制的是线的亮暗 根据前台决定
-		InputStream in = diagramGenerator.generateDiagram(model, "png", highLightedWorkflows, highLightedFlows,
+		
+		AbstractQuery aq = (AbstractQuery) historyService.createHistoricActivityInstanceQuery()
+				.processInstanceId(processInstanceId);
+		List<HistoricActivityInstance> historicActivityInstanceList = aq
+				.orderBy(new HistoricActivityInstanceQueryProperty("ID_+0")).asc().list();
+		// 将已经执行的节点ID放入高亮显示节点集合
+		List<String> highLightedActivitiIdList = new ArrayList<String>();
+		for (HistoricActivityInstance historicActivityInstance : historicActivityInstanceList) {
+			highLightedActivitiIdList.add(historicActivityInstance.getActivityId());
+		}
+		
+		// 通过流程实例ID获取流程中正在执行的节点
+		List<Execution> runningActivityInstanceList = runtimeService.createExecutionQuery()
+				.processInstanceId(processInstanceId).list();
+		List<String> runningActivitiIdList = new ArrayList<String>();
+		for (Execution execution : runningActivityInstanceList) {
+			if (StringUtils.isNotEmpty(execution.getActivityId())) {
+				runningActivitiIdList.add(execution.getActivityId());
+			}
+		}
+		ProcessDiagramGenerator processDiagramGenerator = null;
+		processDiagramGenerator = new CustomProcessDiagramGenerator();
+		// 获取已流经的流程线，需要高亮显示高亮流程已发生流转的线id集合
+		List<String> highLightedFlowIds = getHighLightedFlows(model, historicActivityInstanceList);
+		// 使用默认配置获得流程图表生成器，并生成追踪图片字符流
+		InputStream imageStream = ((CustomProcessDiagramGenerator) processDiagramGenerator).generateDiagramCustom(
+				model, "png", highLightedActivitiIdList, runningActivitiIdList, highLightedFlowIds,
 				processEngineConfiguration.getActivityFontName(), processEngineConfiguration.getLabelFontName(),
-				processEngineConfiguration.getClassLoader(), 1.0);
+				processEngineConfiguration.getActivityFontName(),null, 1.0);
+		
+		
+//		List<String> highLightedFlows = getHighLightedFlows(model, highLightedActivitList);
+//		ProcessDiagramGenerator diagramGenerator = processEngineConfiguration.getProcessDiagramGenerator();
+//		// 第三个参数控制的是线的亮暗 根据前台决定
+//		InputStream in = diagramGenerator.generateDiagram(model, "png", highLightedWorkflows, highLightedFlows,
+//				processEngineConfiguration.getActivityFontName(), processEngineConfiguration.getLabelFontName(),
+//				processEngineConfiguration.getClassLoader(), 1.0);
 		OutputStream out = response.getOutputStream();
-		for (int b = -1; (b = in.read()) != -1;) {
+		for (int b = -1; (b = imageStream.read()) != -1;) {
 			out.write(b);
 		}
 		out.close();
-		in.close();
+		imageStream.close();
 		return null;
 	}
+	
+	public List<String> getHighLightedFlows(BpmnModel bpmnModel,
+			List<HistoricActivityInstance> historicActivityInstanceList) {
+		// 已流经的流程线，需要高亮显示
+		List<String> highLightedFlowIdList = new ArrayList<>();
+		// 全部活动节点
+		List<FlowNode> allHistoricActivityNodeList = new ArrayList<>();
+		// 已完成的历史活动节点
+		List<HistoricActivityInstance> finishedActivityInstanceList = new ArrayList<>();
+
+		for (HistoricActivityInstance historicActivityInstance : historicActivityInstanceList) {
+			// 获取流程节点
+			FlowNode flowNode = (FlowNode) bpmnModel.getMainProcess()
+					.getFlowElement(historicActivityInstance.getActivityId());
+			allHistoricActivityNodeList.add(flowNode);
+			// 结束时间不为空，当前节点则已经完成
+			if (historicActivityInstance.getEndTime() != null) {
+				finishedActivityInstanceList.add(historicActivityInstance);
+			}
+		}
+		FlowNode currentFlowNode = null;
+		FlowNode targetFlowNode = null;
+		HistoricActivityInstance currentActivityInstance;
+		// 遍历已完成的活动实例，从每个实例的outgoingFlows中找到已执行的
+		for (int k = 0; k < finishedActivityInstanceList.size(); k++) {
+			currentActivityInstance = finishedActivityInstanceList.get(k);
+			// 获得当前活动对应的节点信息及outgoingFlows信息
+			currentFlowNode = (FlowNode) bpmnModel.getMainProcess()
+					.getFlowElement(currentActivityInstance.getActivityId());
+			// 当前节点的所有流出线
+			List<SequenceFlow> outgoingFlowList = currentFlowNode.getOutgoingFlows();
+
+			/**
+			 * 遍历outgoingFlows并找到已流转的 满足如下条件认为已流转：
+			 * 1.当前节点是并行网关或兼容网关，则通过outgoingFlows能够在历史活动中找到的全部节点均为已流转
+			 * 2.当前节点是以上两种类型之外的，通过outgoingFlows查找到的时间最早的流转节点视为有效流转
+			 * (第2点有问题，有过驳回的，会只绘制驳回的流程线，通过走向下一级的流程线没有高亮显示)
+			 */
+			if ("parallelGateway".equals(currentActivityInstance.getActivityType())
+					|| "inclusiveGateway".equals(currentActivityInstance.getActivityType())) {
+				// 遍历历史活动节点，找到匹配流程目标节点的
+				for (SequenceFlow outgoingFlow : outgoingFlowList) {
+					// 获取当前节点流程线对应的下级节点
+					targetFlowNode = (FlowNode) bpmnModel.getMainProcess().getFlowElement(outgoingFlow.getTargetRef());
+					// 如果下级节点包含在所有历史节点中，则将当前节点的流出线高亮显示
+					if (allHistoricActivityNodeList.contains(targetFlowNode)) {
+						highLightedFlowIdList.add(outgoingFlow.getId());
+					}
+				}
+			} else {
+				List<Map<String, Object>> tempMapList = new ArrayList<>();
+				// 当前节点ID
+				String currentActivityId = currentActivityInstance.getActivityId();
+				int size = historicActivityInstanceList.size();
+				boolean ifStartFind = false;
+				boolean ifFinded = false;
+				HistoricActivityInstance historicActivityInstance;
+				for (int i = 0; i < historicActivityInstanceList.size(); i++) {
+					historicActivityInstance = historicActivityInstanceList.get(i);
+					// logger.info("第【{}/{}】个历史节点-ActivityId=[{}]", i + 1, size,
+					// historicActivityInstance.getActivityId());
+					// 如果循环历史节点中的id等于当前节点id，从当前历史节点继续先后查找是否有当前节点流程线等于的节点
+					// 历史节点的序号需要大于等于已完成历史节点的序号，防止驳回重审一个节点经过两次是只取第一次的流出线高亮显示，第二次的不显示
+					if (i >= k && historicActivityInstance.getActivityId().equals(currentActivityId)) {
+						// logger.info("第[{}]个历史节点和当前节点一致-ActivityId=[{}]", i +
+						// 1, historicActivityInstance
+						// .getActivityId());
+						ifStartFind = true;
+						// 跳过当前节点继续查找下一个节点
+						continue;
+					}
+					if (ifStartFind) {
+						// logger.info("[开始]-循环当前节点-ActivityId=【{}】的所有流出线",
+						// currentActivityId);
+
+						ifFinded = false;
+						for (SequenceFlow sequenceFlow : outgoingFlowList) {
+							// 如果当前节点流程线对应的下级节点在其后面的历史节点中，则该条流程线进行高亮显示
+							// 【问题】
+							// logger.info("当前流出线的下级节点=[{}]",
+							// sequenceFlow.getTargetRef());
+							if (historicActivityInstance.getActivityId().equals(sequenceFlow.getTargetRef())) {
+								// logger.info("当前节点[{}]需高亮显示的流出线=[{}]",
+								// currentActivityId, sequenceFlow.getId());
+								highLightedFlowIdList.add(sequenceFlow.getId());
+								// 暂时默认找到离当前节点最近的下一级节点即退出循环，否则有多条流出线时将全部被高亮显示
+								ifFinded = true;
+								break;
+							}
+						}
+						// logger.info("[完成]-循环当前节点-ActivityId=【{}】的所有流出线",
+						// currentActivityId);
+					}
+					if (ifFinded) {
+						// 暂时默认找到离当前节点最近的下一级节点即退出历史节点循环，否则有多条流出线时将全部被高亮显示
+						break;
+					}
+				}
+			}
+		}
+		return highLightedFlowIdList;
+	}
+	
 
 	public List<String> getHighLightedFlows(BpmnModel bpmnModel, ProcessDefinitionEntity processDefinitionEntity,
 			List<HistoricActivityInstance> historicActivityInstances) {
@@ -622,7 +764,13 @@ public class TaskController {
 	public String delegateTask(HttpServletResponse response, String userId, String taskId,String comment,HttpSession session) throws Exception {
 		JSONObject result = new JSONObject();
 		try {
-			taskService.delegateTask(taskId, userId);
+			String owner = taskService.createTaskQuery().taskId(taskId).singleResult().getOwner();
+			if(owner!=null&&!("").equals(owner)){
+				if(taskService.createTaskQuery().taskId(taskId).singleResult().getOwner().equals(userId)){
+					throw new RuntimeException("委派人不能是代理人");//这样控制防止委派人是自己的话代办任务执行报错 也可以根据自己的想法控制代办任务的显示
+				}
+			}
+			taskService.delegateTask(taskId, userId);//可以多次委派  避免委派的自己身上  暂时没有处理
 			Authentication.setAuthenticatedUserId(((MemberShip) session.getAttribute("currentMemberShip")).getUser().getFirstName()
 					+ ((MemberShip) session.getAttribute("currentMemberShip")).getUser().getLastName() + "[" + ((MemberShip) session.getAttribute("currentMemberShip")).getGroup().getName() + "]");
 			taskService.addComment(taskId, taskService.createTaskQuery().taskId(taskId).singleResult().getProcessInstanceId(), comment);
@@ -772,7 +920,7 @@ public class TaskController {
 	}
 
 	/**
-	 * 转办任务完成
+	 * 委派任务完成
 	 * 
 	 * @param response
 	 *            流程ID
@@ -896,7 +1044,6 @@ public class TaskController {
 		return null;
 	}
 	
-	
 	/**
 	 * 签收任务列表
 	 * 
@@ -928,7 +1075,7 @@ public class TaskController {
 		// 获取总记录数
 		System.out.println("用户ID：" + userId + "\n" + "名称:" + s_name);
 		long total = taskService.createTaskQuery().taskCandidateUser(userId)
-				.taskNameLike("%" + s_name + "%").count(); // 获取总记录数
+				.taskNameLike("%" + s_name + "%").count(); // 获取总记录数 
 		// 有想法的话，可以去数据库观察 ACT_RU_TASK 的变化
 		List<Task> taskList = taskService.createTaskQuery().taskCandidateUser(userId).taskNameLike("%" + s_name + "%")
 				.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
@@ -951,7 +1098,6 @@ public class TaskController {
 		ResponseUtil.write(response, result);
 		return null;
 	}
-	
 	
 	/**
 	 * 签收任务

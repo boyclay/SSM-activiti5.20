@@ -23,17 +23,25 @@
 	}
 
 	function formatAction(val, row) {
-		return "<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='${pageContext.request.contextPath}/processDefinition/showView.action?deploymentId="
+		return "<a href='#' onclick='javascript:showView("
 				+ row.deploymentId
-				+ "&diagramResourceName="
-				+ row.diagramResourceName
-				+ "' target='_blank'>查看流程图</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:actProcessDefinition("
-				+ row.deploymentId + ","+ row.suspensionState
+				+ ")'>查看流程图</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:actProcessDefinition("
+				+ row.deploymentId
+				+ ","
+				+ row.suspensionState
 				+ ")'>激活</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:susProcessDefinition("
 				+ row.deploymentId + "," + row.suspensionState + ")'>挂起</a>";
 	}
 
-	function actProcessDefinition(deploymentId,suspensionState) {
+	function showView(deploymentId) {
+		var url = "${pageContext.request.contextPath}/processDefinition/showView.action?deploymentId="
+				+ deploymentId
+				+ "";
+		$("#dlg10").dialog("open").dialog("setTitle", "查看流程图片");
+		$("#simg").attr("src", url);
+	}
+
+	function actProcessDefinition(deploymentId, suspensionState) {
 		if (suspensionState == 1) {
 			$.messager.alert("系统提示", "流程处于激活状态！");
 			return;
@@ -111,6 +119,11 @@
 				class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
 		</div>
 	</div>
+	<div id="dlg10" class="easyui-dialog"
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		<img id="simg" src="" alt="流程图片">
+	</div>
+
 
 </body>
 </html>

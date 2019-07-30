@@ -26,8 +26,15 @@
 				+ row.id
 				+ ")'>流程执行过程</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:openListCommentDialog("
 				+ row.id
-				+ ")'>历史批注</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' target='_blank' href='${pageContext.request.contextPath}/processDefinition/showViewByTaskId.do?taskId="
-				+ row.id + "'>查看流程图</a>"
+				+ ")'>历史批注</a>&nbsp;<a href='#' onclick='javascript:showViewByTaskId("
+				+ row.id + ")'>查看流程图</a>"
+	}
+
+	function showViewByTaskId(taskId) {
+		var url = "${pageContext.request.contextPath}/processDefinition/showViewByTaskId.do?taskId="
+				+ taskId + "";
+		$("#dlg10").dialog("open").dialog("setTitle", "查看流程图片");
+		$("#simg").attr("src", url);
 	}
 	function openListCommentDialog(taskId) {
 		var opts = $("#dg2").datagrid("options");
@@ -101,12 +108,10 @@
 			</thead>
 		</table>
 	</div>
-	
-	<div id="dlg4" class="easyui-dialog" url=""
-		style="width: 1000px; height: 800px; padding: 10px 20px" closed="true">
-		
-		
-<img>
+
+	<div id="dlg10" class="easyui-dialog"
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		<img id="simg" src="" alt="流程图片">
 	</div>
 
 </body>

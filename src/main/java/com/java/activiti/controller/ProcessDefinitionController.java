@@ -72,14 +72,14 @@ public class ProcessDefinitionController {
 	/**
 	 * 查看流程图
 	 * @param deploymentId  流程ID
-	 * @param diagramResourceName
 	 * @param response
 	 * @return
 	 * @throws Exception
 	 */
 	@RequestMapping("/showView")
-	public String showView(String deploymentId,String diagramResourceName,HttpServletResponse response)throws Exception{
-		InputStream inputStream=repositoryService.getResourceAsStream(deploymentId, diagramResourceName);
+	public String showView(String deploymentId,HttpServletResponse response)throws Exception{
+		//这里可以多种形式 随便玩耍
+		InputStream inputStream=repositoryService.getProcessDiagram(repositoryService.createProcessDefinitionQuery().deploymentId(deploymentId).singleResult().getId());
 		OutputStream out=response.getOutputStream();
 		for(int b=-1;(b=inputStream.read())!=-1;){
 			out.write(b);

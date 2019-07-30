@@ -34,76 +34,81 @@
 				+ row.id
 				+ ")'>办理任务</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' href='javascript:openListCommentDialog("
 				+ row.id
-				+ ")'>历史批注</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' target='_blank' href='${pageContext.request.contextPath}/task/showHisCurrentView.action?taskId="
-				+ row.id + "'>查看当前流程图</a>"
+				+ ")'>历史批注</a>&nbsp;<a href='#' onclick='javascript:showHisCurrentView("
+				+ row.id + ")'>查看当前流程图</a>"
 	}
 
-	$(function(){
+	$(function() {
 		$('#tgroupId')
-		.combobox(
-				{
-					onShowPanel : function(){
-						       $(this).combobox('options').url= "${pageContext.request.contextPath}/group/findGroup.action";
-						       $(this).combobox('reload');
-					},
-					onSelect : function(row) {
-						$('#tuserId')
-								.combobox(
-										{
-											url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
-													+ row.id + "",
-											formatter : function(row) {
-												return '<span class="item-text">'
-														+ row.firstName
-														+ row.lastName
-														+ '</span>';
-											}
-										});
-					},
-				});
-		
+				.combobox(
+						{
+							onShowPanel : function() {
+								$(this).combobox('options').url = "${pageContext.request.contextPath}/group/findGroup.action";
+								$(this).combobox('reload');
+							},
+							onSelect : function(row) {
+								$('#tuserId')
+										.combobox(
+												{
+													url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
+															+ row.id + "",
+													formatter : function(row) {
+														return '<span class="item-text">'
+																+ row.firstName
+																+ row.lastName
+																+ '</span>';
+													}
+												});
+							},
+						});
+
 		$('#groupId')
-		.combobox(
-				{
-					onShowPanel : function(){
-						       $(this).combobox('options').url= "${pageContext.request.contextPath}/group/findGroup.action";
-						       $(this).combobox('reload');
-					},
-					onSelect : function(row) {
-						$('#userId')
-								.combobox(
-										{
-											url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
-													+ row.id + "",
-											formatter : function(row) {
-												return '<span class="item-text">'
-														+ row.firstName
-														+ row.lastName
-														+ '</span>';
-											}
-										});
-					},
-				});
-		
+				.combobox(
+						{
+							onShowPanel : function() {
+								$(this).combobox('options').url = "${pageContext.request.contextPath}/group/findGroup.action";
+								$(this).combobox('reload');
+							},
+							onSelect : function(row) {
+								$('#userId')
+										.combobox(
+												{
+													url : "${pageContext.request.contextPath}/user/getUserByGoupId.action?groupId="
+															+ row.id + "",
+													formatter : function(row) {
+														return '<span class="item-text">'
+																+ row.firstName
+																+ row.lastName
+																+ '</span>';
+													}
+												});
+							},
+						});
+
 		$('#rTaskId')
-		.combobox(
-				{
-					formatter : function(row) {
-						return '<span class="item-text">'
-								+ row.name
-								+ '</span>';
-					},
-					onShowPanel : function(){
-							   var rebutTaskId = $("#rebutTaskId").val();
-						       $(this).combobox('options').url= "${pageContext.request.contextPath}/task/getAllUserTask.action?taskId="+rebutTaskId;
-						       $(this).combobox('reload');
-					},
-				});
-		
-		
-		
+				.combobox(
+						{
+							formatter : function(row) {
+								return '<span class="item-text">' + row.name
+										+ '</span>';
+							},
+							onShowPanel : function() {
+								var rebutTaskId = $("#rebutTaskId").val();
+								$(this).combobox('options').url = "${pageContext.request.contextPath}/task/getAllUserTask.action?taskId="
+										+ rebutTaskId;
+								$(this).combobox('reload');
+							},
+						});
+
 	})
-	
+
+	function showHisCurrentView(taskId) {
+		var url = "${pageContext.request.contextPath}/task/showHisCurrentView.do?taskId="
+				+ taskId + "";
+		$("#dlg10").dialog("open").dialog("setTitle", "查看流程图片");
+		$("#simg").attr("src", url);
+	}
+
 	function openDelegateTaskTab(taskId) {
 		$("#dlg4").dialog("open").dialog("setTitle", "添加委派信息");
 		$("#detaskId").val(taskId);
@@ -126,7 +131,7 @@
 		$("#dg2").datagrid("load");
 		$("#dlg2").dialog("open").dialog("setTitle", "查看历史批注");
 	}
-	
+
 	function closeDialog4() {
 		$("#dlg4").dialog("close");
 	}
@@ -235,36 +240,32 @@
 									return;
 								}
 							}
-	});
+						});
 	}
-	
+
 	function saveRebuts() {
-		$("#rfm")
-				.form(
-						"submit",
-						{
-							url : '${pageContext.request.contextPath}/task/anyRebut.action',
-							onSubmit : function() {
-								if ($("#rTaskId").combobox("getValue") == "请选择") {
-									$.messager.alert("系统提示", "请选择用户节点！");
-									return false;
-								}
-								return $(this).form("validate");
-							},
-							success : function(result) {
-								var result = eval('(' + result + ')');
-								if (result.success) {
-									$.messager.alert("系统系统", "驳回成功！");
-									$("#dlg6").dialog("close");
-									$("#dg").datagrid("reload");
-								} else {
-									$.messager.alert("系统系统", "驳回失败！");
-									return;
-								}
-							}
-	});
+		$("#rfm").form("submit", {
+			url : '${pageContext.request.contextPath}/task/anyRebut.action',
+			onSubmit : function() {
+				if ($("#rTaskId").combobox("getValue") == "请选择") {
+					$.messager.alert("系统提示", "请选择用户节点！");
+					return false;
+				}
+				return $(this).form("validate");
+			},
+			success : function(result) {
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$.messager.alert("系统系统", "驳回成功！");
+					$("#dlg6").dialog("close");
+					$("#dg").datagrid("reload");
+				} else {
+					$.messager.alert("系统系统", "驳回失败！");
+					return;
+				}
+			}
+		});
 	}
-	
 </script>
 </head>
 <body style="margin: 1px">
@@ -353,7 +354,7 @@
 				<tr>
 					<td>委派組：</td>
 					<td><input id="groupId" name="groupId" class="easyui-combobox"
-												data-options="panelHeight:'auto',valueField:'id',textField:'name'" 
+						data-options="panelHeight:'auto',valueField:'id',textField:'name'"
 						value="请选择" /></td>
 				</tr>
 				<tr>
@@ -443,6 +444,11 @@
 		<a href="javascript:saveRebuts()" class="easyui-linkbutton"
 			iconCls="icon-ok">驳回</a> <a href="javascript:closeDialog6()"
 			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
+
+	<div id="dlg10" class="easyui-dialog"
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		<img id="simg" src="" alt="流程图片">
 	</div>
 </body>
 </html>

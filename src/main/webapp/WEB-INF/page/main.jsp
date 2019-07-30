@@ -117,7 +117,7 @@
  			<img src=""/>
  		</td>
  		<td valign="bottom" align="right" width="50%">
- 			<font size="3">&nbsp;&nbsp;<strong>欢迎：</strong>${currentMemberShip.user.id }(${currentMemberShip.user.firstName }${currentMemberShip.user.lastName })【${currentMemberShip.group.name}】</font>
+ 			<font size="3">&nbsp;&nbsp;<strong>欢迎：</strong>${currentMemberShip.user.id }(${currentMemberShip.user.firstName }${currentMemberShip.user.lastName })【${currentMemberShip.group.name}${currentMemberShip.group.id}】</font>
  		</td>
  	</tr>
  </table>

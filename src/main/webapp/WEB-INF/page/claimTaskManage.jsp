@@ -26,8 +26,15 @@
 	function formatAction(val, row) {
 		return "<a href='javascript:openClaimTaskTab("
 				+ row.id
-				+ ")'>签收</a>&nbsp;<a style='padding:5px;background:#fafafa;width:500px;border:1px solid #ccc' target='_blank' href='${pageContext.request.contextPath}/task/showHisCurrentView.action?taskId="
-				+ row.id + "'>查看当前流程图</a>"
+				+ ")'>签收</a>&nbsp;<a href='#' onclick='javascript:showHisCurrentView("
+				+ row.id + ")'>查看当前流程图</a>"
+	}
+	
+	function showHisCurrentView(taskId) {
+		var url = "${pageContext.request.contextPath}/task/showHisCurrentView.do?taskId="
+				+ taskId + "";
+		$("#dlg10").dialog("open").dialog("setTitle", "查看流程图片");
+		$("#simg").attr("src", url);
 	}
 
 	function openClaimTaskTab(taskId) {
@@ -72,5 +79,10 @@
 				iconCls="icon-search" plain="true">搜索</a>
 		</div>
 	</div>
+		<div id="dlg10" class="easyui-dialog"
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		<img id="simg" src="" alt="流程图片">
+	</div>
+	
 </body>
 </html>
