@@ -350,7 +350,7 @@ public class TaskController {
 		Authentication.setAuthenticatedUserId(currentMemberShip.getUser().getFirstName()
 				+ currentMemberShip.getUser().getLastName() + "[" + currentMemberShip.getGroup().getName() + "]");
 		// 添加批注信息
-		taskService.addComment(taskId, processInstanceId, comment);
+		taskService.addComment(taskId, processInstanceId, comment);//同意拒绝都是就根据不同条件走不同分支而已 驳回是驳回到前一个节点
 		if (state == 1) {
 			String leaveId = (String) taskService.getVariable(taskId, "leaveId");
 			Leave leave = leaveService.findById(leaveId);
@@ -978,7 +978,9 @@ public class TaskController {
 		List<UserTask> userTaskList = new ArrayList<>();
 		for (FlowElement flowElement : flowElementList) {
 			if (flowElement instanceof UserTask) {
-				userTaskList.add((UserTask)flowElement);
+				if(!((UserTask)flowElement).getId().equals(task.getTaskDefinitionKey())){//驳回节点不能设置为当前节点 可以是其他任意节点 业务逻辑自己控制
+					userTaskList.add((UserTask)flowElement);
+				}
 			}
 		}
 		JSONArray jsonArray=new JSONArray();
