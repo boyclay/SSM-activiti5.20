@@ -110,6 +110,36 @@ public class LeaveController {
 		ResponseUtil.write(response, result);
 		return null;
 	}
+	
+	/**
+	 * 驳回修改重提交请假单
+	 * 这里的之前的业务数据没有保存,如果有需要自己操作
+	 * @param leave
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/change")
+	public String change(Leave leave,HttpServletResponse response)throws Exception{
+		leave.setLeaveDate(new Date());
+		//添加用户对象
+		leaveService.updateLeaveData(leave);
+		Map<String,Object> variables=new HashMap<String,Object>();
+		variables.put("leaveId", leave.getId());
+		// 启动流程
+		// 根据流程实例Id查询任务
+		Task task=taskService.createTaskQuery().processInstanceId(leave.getProcessInstanceId()).singleResult(); 
+		 // 完成 学生填写请假单任务		
+		taskService.complete(task.getId()); 
+		//修改状态
+		leave.setState("审核中");
+		 // 修改请假单状态
+		leaveService.updateLeave(leave);
+		JSONObject result=new JSONObject();
+		result.put("success", true);
+		ResponseUtil.write(response, result);
+		return null;
+	}
 	/**
 	 * 提交請假流程申請
 	 * @return

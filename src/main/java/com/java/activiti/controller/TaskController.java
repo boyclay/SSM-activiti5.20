@@ -16,11 +16,11 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.activiti.bpmn.model.BpmnModel;
-import org.activiti.bpmn.model.ExtensionAttribute;
-import org.activiti.bpmn.model.ExtensionElement;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.bpmn.model.FlowNode;
+import org.activiti.bpmn.model.Process;
 import org.activiti.bpmn.model.SequenceFlow;
+import org.activiti.bpmn.model.StartEvent;
 import org.activiti.bpmn.model.UserTask;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
@@ -54,6 +54,7 @@ import org.activiti.engine.task.DelegationState;
 import org.activiti.engine.task.Task;
 import org.activiti.image.ProcessDiagramGenerator;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
@@ -102,6 +103,9 @@ public class TaskController {
 
 	@Resource
 	private ProcessEngineConfiguration processEngineConfiguration;
+	
+	@Resource
+	private ApplicationContext applicationContext;//这个可以用于观察者模式
 
 	/**
 	 * 查询历史流程批注
@@ -346,6 +350,7 @@ public class TaskController {
 		variables.put("dasy", leaveDays);
 		// 获取流程实例id
 		String processInstanceId = task.getProcessInstanceId();
+		String processDefinitionId = task.getProcessDefinitionId();
 		// 设置用户id
 		Authentication.setAuthenticatedUserId(currentMemberShip.getUser().getFirstName()
 				+ currentMemberShip.getUser().getLastName() + "[" + currentMemberShip.getGroup().getName() + "]");
@@ -401,6 +406,11 @@ public class TaskController {
 			}
 			for (PvmTransition pvmTransition : oriPvmTransitionList) {
 				pvmTransitionList.add(pvmTransition);
+			}
+			if(taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult().getTaskDefinitionKey().equals(this.getElementType(processDefinitionId))){
+				Leave leave=leaveService.findByProcessInstanceId(processInstanceId);
+				leave.setState("驳回修改中");
+				leaveService.updateLeave(leave);
 			}
 		}
 		JSONObject result = new JSONObject();
@@ -525,6 +535,65 @@ public class TaskController {
 		ResponseUtil.write(response, result);
 		return null;
 	}
+	
+	@RequestMapping("/showHisView")
+	public String showHisView(String processInstanceId, HttpServletResponse response) throws Exception {
+		HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery().processInstanceId(processInstanceId).singleResult();
+		String processDefinitionId = historicProcessInstance.getProcessDefinitionId();
+		String processKey = repositoryService.createProcessDefinitionQuery().processDefinitionId(processDefinitionId)
+				.singleResult().getKey();
+		BpmnModel model = repositoryService.getBpmnModel(repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(processDefinitionId).singleResult().getId());
+		// 控制所有的节点并非当前活跃的节点
+		List<HistoricActivityInstance> highLightedActivitList = historyService.createHistoricActivityInstanceQuery()
+				.processInstanceId(processInstanceId).orderByHistoricActivityInstanceId().asc().list();
+		// 高亮环节id集合
+		List<String> highLightedWorkflows = new ArrayList<String>();
+		// 高亮线路id集合
+		for (HistoricActivityInstance tempActivity : highLightedActivitList) {
+			String activityId = tempActivity.getActivityId();
+			highLightedWorkflows.add(activityId);
+		}
+		ProcessDefinitionEntity definitionEntity = (ProcessDefinitionEntity) repositoryService
+				.getProcessDefinition(processDefinitionId);
+
+		
+		AbstractQuery aq = (AbstractQuery) historyService.createHistoricActivityInstanceQuery()
+				.processInstanceId(processInstanceId);
+		List<HistoricActivityInstance> historicActivityInstanceList = aq
+				.orderBy(new HistoricActivityInstanceQueryProperty("ID_+0")).asc().list();
+		// 将已经执行的节点ID放入高亮显示节点集合
+		List<String> highLightedActivitiIdList = new ArrayList<String>();
+		for (HistoricActivityInstance historicActivityInstance : historicActivityInstanceList) {
+			highLightedActivitiIdList.add(historicActivityInstance.getActivityId());
+		}
+		
+		// 通过流程实例ID获取流程中正在执行的节点
+		List<Execution> runningActivityInstanceList = runtimeService.createExecutionQuery()
+				.processInstanceId(processInstanceId).list();
+		List<String> runningActivitiIdList = new ArrayList<String>();
+		for (Execution execution : runningActivityInstanceList) {
+			if (StringUtils.isNotEmpty(execution.getActivityId())) {
+				runningActivitiIdList.add(execution.getActivityId());
+			}
+		}
+		ProcessDiagramGenerator processDiagramGenerator = null;
+		processDiagramGenerator = new CustomProcessDiagramGenerator();
+		// 获取已流经的流程线，需要高亮显示高亮流程已发生流转的线id集合
+		List<String> highLightedFlowIds = getHighLightedFlows(model, historicActivityInstanceList);
+		// 使用默认配置获得流程图表生成器，并生成追踪图片字符流
+		InputStream imageStream = ((CustomProcessDiagramGenerator) processDiagramGenerator).generateDiagramCustom(
+				model, "png", highLightedActivitiIdList, runningActivitiIdList, highLightedFlowIds,
+				processEngineConfiguration.getActivityFontName(), processEngineConfiguration.getLabelFontName(),
+				processEngineConfiguration.getActivityFontName(),null, 1.0);
+		OutputStream out = response.getOutputStream();
+		for (int b = -1; (b = imageStream.read()) != -1;) {
+			out.write(b);
+		}
+		out.close();
+		imageStream.close();
+		return null;
+	}
 
 	@RequestMapping("/showHisCurrentView")
 	public String showHisCurrentView(String taskId, HttpServletResponse response) throws Exception {
@@ -578,14 +647,6 @@ public class TaskController {
 				model, "png", highLightedActivitiIdList, runningActivitiIdList, highLightedFlowIds,
 				processEngineConfiguration.getActivityFontName(), processEngineConfiguration.getLabelFontName(),
 				processEngineConfiguration.getActivityFontName(),null, 1.0);
-		
-		
-//		List<String> highLightedFlows = getHighLightedFlows(model, highLightedActivitList);
-//		ProcessDiagramGenerator diagramGenerator = processEngineConfiguration.getProcessDiagramGenerator();
-//		// 第三个参数控制的是线的亮暗 根据前台决定
-//		InputStream in = diagramGenerator.generateDiagram(model, "png", highLightedWorkflows, highLightedFlows,
-//				processEngineConfiguration.getActivityFontName(), processEngineConfiguration.getLabelFontName(),
-//				processEngineConfiguration.getClassLoader(), 1.0);
 		OutputStream out = response.getOutputStream();
 		for (int b = -1; (b = imageStream.read()) != -1;) {
 			out.write(b);
@@ -958,7 +1019,6 @@ public class TaskController {
 		return null;
 	}
 	
-	
 	/**
 	 * 获取所有的任务节点
 	 * 
@@ -1001,11 +1061,12 @@ public class TaskController {
 	 */
 	@RequestMapping("/anyRebut")
 	public String anyRebut(String id,String taskId,String comment,HttpServletResponse response,HttpSession session) throws Exception {
-		
 		JSONObject result = new JSONObject();
 		try {
 			// 首先根据ID查询任务
 			Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+			String processDefinitionId = task.getProcessDefinitionId();
+			String processInstanceId = task.getProcessInstanceId();
 			ProcessDefinitionEntity definition = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
 					.getDeployedProcessDefinition(task.getProcessDefinitionId());
 			ActivityImpl currActivity = ((ProcessDefinitionImpl) definition).findActivity(task.getTaskDefinitionKey());
@@ -1037,12 +1098,30 @@ public class TaskController {
 			for (PvmTransition pvmTransition : oriPvmTransitionList) {
 				pvmTransitionList.add(pvmTransition);
 			}
+			if(taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult().getTaskDefinitionKey().equals(this.getElementType(processDefinitionId))){
+				Leave leave=leaveService.findByProcessInstanceId(processInstanceId);
+				leave.setState("驳回修改中");
+				leaveService.updateLeave(leave);
+			}
 			result.put("success", true);
 		} catch (Exception e1) {
 			result.put("success", false);
 			e1.printStackTrace();
 		}
 		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	public String getElementType(String processDefinitionId) {
+		BpmnModel bpmnModel = repositoryService.getBpmnModel(processDefinitionId);
+		Process process = bpmnModel.getProcesses().get(0);
+		Collection<FlowElement> flowElements = process.getFlowElements();
+		for (FlowElement flowElement : flowElements) {
+			if (flowElement instanceof StartEvent) {
+				StartEvent startEvent = (StartEvent) flowElement;
+				return startEvent.getOutgoingFlows().get(0).getTargetRef();
+			}
+		}
 		return null;
 	}
 	
@@ -1106,7 +1185,6 @@ public class TaskController {
 	 * 
 	 * @param response
 	 * @param userId
-	 *            流程ID
 	 * @return
 	 * @throws Exception
 	 */
@@ -1116,6 +1194,71 @@ public class TaskController {
 		JSONObject result = new JSONObject();
 		try {
 			taskService.claim(taskId, userId);
+			result.put("success", true);
+		} catch (Exception e) {
+			result.put("success", false);
+			e.printStackTrace();
+		}
+		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	/**
+	 * 撤回 此功能可以类似驳回 异曲同工 暂时不理会
+	 * 
+	 * @param response
+	 * @param processInstanceId
+	 *            流程ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/recall")
+	public String recall(HttpServletResponse response,String processInstanceId){
+		JSONObject result = new JSONObject();
+		try {
+			BpmnModel bpmnModel = repositoryService.getBpmnModel(historyService.createHistoricProcessInstanceQuery()
+					.processInstanceId(processInstanceId).singleResult().getProcessDefinitionId());// 获取模型
+			Task task = taskService.createTaskQuery().processInstanceId(processInstanceId).orderByTaskId()
+					.desc().list().get(0);// 任务
+			ProcessDefinitionEntity definition = (ProcessDefinitionEntity) ((RepositoryServiceImpl) repositoryService)
+					.getDeployedProcessDefinition(task.getProcessDefinitionId());
+			ActivityImpl currActivity = ((ProcessDefinitionImpl) definition).findActivity(task.getTaskDefinitionKey());
+			List<PvmTransition> nextTransitionList = currActivity.getIncomingTransitions();// 获取流出方向
+			// 清除当前活动的出口
+			List<PvmTransition> oriPvmTransitionList = new ArrayList<PvmTransition>();
+			List<PvmTransition> pvmTransitionList = currActivity.getOutgoingTransitions();// 获取流入方向
+			for (PvmTransition pvmTransition : pvmTransitionList) {
+				oriPvmTransitionList.add(pvmTransition);
+			}
+			pvmTransitionList.clear();
+			List<ActivityImpl> nextActivityImplList = new ArrayList<>();
+			// 建立新出口
+			List<TransitionImpl> newTransitions = new ArrayList<TransitionImpl>();
+			for (PvmTransition nextTransition : nextTransitionList) {
+				PvmActivity nextActivity = nextTransition.getSource();
+				ActivityImpl nextActivityImpl = ((ProcessDefinitionImpl) definition).findActivity(nextActivity.getId());
+				nextActivityImplList = removeDuplicate(
+						getNextActivityImpl(nextActivity, nextActivityImpl, definition, nextActivityImplList));
+				for (int i = 0; i < nextActivityImplList.size(); i++) {
+					TransitionImpl newTransition = currActivity.createOutgoingTransition();
+					newTransition.setDestination(nextActivityImplList.get(i));
+					newTransitions.add(newTransition);
+				}
+			}
+			taskService.complete(task.getId());// 驳回新建的方向连接线是没有判定的
+			// 恢复方向
+			for (TransitionImpl transitionImpl : newTransitions) {
+				currActivity.getOutgoingTransitions().remove(transitionImpl);
+				transitionImpl.getDestination().getIncomingTransitions().remove(transitionImpl);
+			}
+			for (PvmTransition pvmTransition : oriPvmTransitionList) {
+				pvmTransitionList.add(pvmTransition);
+			}
+			if(taskService.createTaskQuery().processInstanceId(processInstanceId).singleResult().getTaskDefinitionKey().equals(this.getElementType(task.getProcessDefinitionId()))){
+				Map<String,Object>varMap = new HashMap<>();
+				varMap.put("outcome", "startRecall");
+				taskService.complete(task.getId(),varMap);// 驳回新建的方向连接线是没有判定的
+			}
 			result.put("success", true);
 		} catch (Exception e) {
 			result.put("success", false);

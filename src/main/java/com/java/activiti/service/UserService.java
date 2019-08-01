@@ -57,6 +57,13 @@ public interface UserService {
 	 * @return
 	 */
 	public void modifyPassword(User user);
+	
+	/**
+	 * ·¢ËÍÓÊ¼ş
+	 * @param map
+	 * @return
+	 */
+	public void sendMail(Map<String,String> map);
 }
 
 

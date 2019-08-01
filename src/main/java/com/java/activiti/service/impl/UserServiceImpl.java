@@ -5,16 +5,21 @@ import java.util.Map;
 
 import javax.annotation.Resource;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.java.activiti.dao.UserDao;
 import com.java.activiti.model.User;
 import com.java.activiti.service.UserService;
+import com.java.activiti.util.MailUtil;
 
-@Service("serService")
+@Service("userService")
 public class UserServiceImpl implements UserService{
 	@Resource
 	private UserDao userDao;
+	
+	@Resource
+	private ApplicationContext applicationContext;
 	
 	public User findById(String userId){
 		return userDao.findById(userId);
@@ -73,5 +78,10 @@ public class UserServiceImpl implements UserService{
 	@Override
 	public void modifyPassword(User user) {
 		 userDao.modifyPassword(user);
+	}
+	@Override
+	public void sendMail(Map<String, String> map) {
+		map.put("toaddress", userDao.getToAddress(map));
+		MailUtil.sendMail(map);
 	}
 }

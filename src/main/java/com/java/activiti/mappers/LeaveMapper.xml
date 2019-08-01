@@ -44,6 +44,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	<select id="findById" parameterType="String" resultMap="LeaveResult">
 		select * from t_leave where id=#{id}
 	</select>
+	
+	<select id="findByProcessInstanceId" parameterType="String" resultMap="LeaveResult">
+		select * from t_leave where processInstanceId=#{processInstanceId}
+	</select>
+	
 	<select id="getLeaveByTaskId" parameterType="String" resultMap="LeaveResult">
 		select * from  t_leave  
 		where processInstanceId=#{processInstanceId}
@@ -60,6 +65,20 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		</set>
 		where id=#{id}
 	</update>
+	
+	<update id="updateLeaveData" parameterType="Leave">
+		update t_leave 
+		<set>
+			leaveDate=#{leaveDate},
+			<if test="leaveReason!=null and leaveReason!='' ">
+				leaveReason=#{leaveReason},
+			</if>
+		</set>
+		where id=#{id}
+	</update>
+	
+	
+	
 	
 	
 </mapper> 

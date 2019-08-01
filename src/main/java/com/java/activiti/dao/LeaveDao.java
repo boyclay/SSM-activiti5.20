@@ -22,4 +22,8 @@ public interface LeaveDao {
 		public int updateLeave(Leave leave);
 		
 		public Leave getLeaveByTaskId(String processInstanceId);
+		
+		public Leave findByProcessInstanceId(String processInstanceId);
+		
+		public int updateLeaveData(Leave leave);
 }

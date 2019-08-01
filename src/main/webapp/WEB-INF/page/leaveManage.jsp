@@ -19,10 +19,73 @@
 	function formatAction(val, row) {
 		if (row.state == '未提交') {
 			return "<a href='javascript:startApply(" + row.id + ")'>提交申请</a>";
-		} else if (row.state == '审核通过' || row.state == '审核未通过') {
+		} else if (row.state == '审核通过'||row.state == '审核未通过' || row.state == '审核中') {
 			return "<a href='javascript:openListCommentDialog("
-					+ row.processInstanceId + ")'>查看历史批注</a>";
+					+ row.processInstanceId
+					+ ")'>历史批注</a>&nbsp;<a href='#' onclick='javascript:showHisView("
+					+ row.processInstanceId + ")'>流程图</a>&nbsp";
+		} else if (row.state == '驳回修改中') {
+			return "<a href='javascript:change("
+					+ row.processInstanceId
+					+ ")'>修改重新发起</a>&nbsp;<a href='javascript:openListCommentDialog("
+					+ row.processInstanceId
+					+ ")'>历史批注</a>&nbsp;<a href='#' onclick='javascript:showHisView("
+					+ row.processInstanceId
+					+ ")'>流程图</a>";
 		}
+	}
+
+	function recall(processInstanceId) {
+		$.post(
+				"${pageContext.request.contextPath}/task/recall?processInstanceId="
+						+ processInstanceId + "", function(result) {
+					if (result.success) {
+						$.messager.alert("系统提示", "撤回处理成功！");
+						$("#dg").datagrid("reload");
+					} else {
+						$.messager.alert("系统提示", "撤回失败！");
+					}
+				}, "json");
+	}
+
+	function checkData() {
+		$("#changfm").form("submit", {
+			url : '${pageContext.request.contextPath}/leave/change.action',
+			onSubmit : function() {
+				return $(this).form("validate");
+			},
+			success : function(result) {
+				var result = eval('(' + result + ')');
+				if (result.success) {
+					$.messager.alert("系统系统", "更新成功！");
+					resetChangeValue();
+					$("#dlg3").dialog("close");
+					$("#dg").datagrid("reload");
+				} else {
+					$.messager.alert("系统系统", "更新失败！");
+					return;
+				}
+			}
+		});
+	}
+
+	function change() {
+		var selectRows = $("#dg").datagrid("getSelections");
+		if (selectRows.length != 1) {
+			$.messager.alert("系统提示", "请选择一条要编辑的数据！");
+			return;
+		}
+		var row = selectRows[0];
+		$("#dlg3").dialog("open").dialog("setTitle", "修改申请信息");
+		$("#changfm").form("load", row);
+		$("#leaveType").attr("readonly", true);
+	}
+
+	function showHisView(processInstanceId) {
+		var url = "${pageContext.request.contextPath}/task/showHisView.do?processInstanceId="
+				+ processInstanceId + "";
+		$("#dlg10").dialog("open").dialog("setTitle", "查看流程图片");
+		$("#simg").attr("src", url);
 	}
 
 	function openListCommentDialog(processInstanceId) {
@@ -40,8 +103,8 @@
 		$("#fm").form("submit", {
 			url : '${pageContext.request.contextPath}/leave/save.action',
 			onSubmit : function() {
-				if($("#leaveType").combobox("getValue")=="请选择"){
-					$.messager.alert("系统提示","请选择休假类型！");
+				if ($("#leaveType").combobox("getValue") == "请选择") {
+					$.messager.alert("系统提示", "请选择休假类型！");
 					return false;
 				}
 				return $(this).form("validate");
@@ -59,6 +122,17 @@
 				}
 			}
 		});
+	}
+
+	function closeChangeDialog() {
+		$("#dlg3").dialog("close");
+		resetChangeValue();
+	}
+
+	function resetChangeValue() {
+		$("#leaveType").val("");
+		$("#leaveDays").val("");
+		$("#leaveReason").val("");
 	}
 
 	function resetValue() {
@@ -83,15 +157,15 @@
 			}
 		}, "json");
 	}
-	
+
 	function formatType(val, row) {
 		if (val == 'AL') {
 			return "年假";
-		}else if (val == 'OT')  {
+		} else if (val == 'OT') {
 			return "加班";
-		}else if (val == 'PL'){
+		} else if (val == 'PL') {
 			return "事假";
-		}else{
+		} else {
 			return "病假";
 		}
 	}
@@ -106,7 +180,8 @@
 			<tr>
 				<th field="cb" checkbox="true" align="center"></th>
 				<th field="id" width="30" align="center">编号</th>
-				<th field="leaveType" width="40" align="center" formatter="formatType">请假类型</th>
+				<th field="leaveType" width="40" align="center"
+					formatter="formatType">请假类型</th>
 				<th field="leaveDate" width="80" align="center">请假日期</th>
 				<th field="leaveDays" width="30" align="center">请假天数</th>
 				<th field="leaveReason" width="200" align="center">请假原因</th>
@@ -131,27 +206,27 @@
 
 		<form id="fm" method="post">
 			<table cellpadding="8px">
-			<tr>
-				<td>请假类型：</td>
-				<td>
-					<input  id="leaveType" name="leaveType" class="easyui-combobox" data-options="panelHeight:'auto',valueField:'key',textField:'name',url:'${pageContext.request.contextPath}/leave/getLeaveType.action'" value="请选择"/>
-				</td>
-			</tr>
- 			<tr>
- 				<td>请假天数：</td>
- 				<td>
- 					<input type="text" id="leaveDays" name="leaveDays" class="easyui-numberbox" required="true"/>
- 				</td>
- 			</tr>
- 			<tr>
- 				<td valign="top">请假原因：</td>
- 				<td>
- 					<input type="hidden" name="userId" value="${currentMemberShip.userId}"/>
- 					<input type="hidden" name="state" value="未提交"/>
- 					<textarea type="text" id="leaveReason" name="leaveReason"  rows="5" cols="49" class="easyui-validatebox" required="true"></textarea>
- 				</td>
- 			</tr>
- 		
+				<tr>
+					<td>请假类型：</td>
+					<td><input id="leaveType" name="leaveType"
+						class="easyui-combobox"
+						data-options="panelHeight:'auto',valueField:'key',textField:'name',url:'${pageContext.request.contextPath}/leave/getLeaveType.action'"
+						value="请选择" /></td>
+				</tr>
+				<tr>
+					<td>请假天数：</td>
+					<td><input type="text" id="leaveDays" name="leaveDays"
+						class="easyui-numberbox" required="true" /></td>
+				</tr>
+				<tr>
+					<td valign="top">请假原因：</td>
+					<td><input type="hidden" name="userId"
+						value="${currentMemberShip.userId}" /> <input type="hidden"
+						name="state" value="未提交" /> <textarea type="text"
+							id="leaveReason" name="leaveReason" rows="5" cols="49"
+							class="easyui-validatebox" required="true"></textarea></td>
+				</tr>
+
 			</table>
 		</form>
 	</div>
@@ -175,6 +250,47 @@
 				</tr>
 			</thead>
 		</table>
+	</div>
+
+
+	<div id="dlg3" class="easyui-dialog"
+		style="width: 620px; height: 250px; padding: 10px 20px" closed="true"
+		buttons="#cdlg-buttons">
+
+		<form id="changfm" method="post">
+			<table cellpadding="8px">
+				<tr>
+					<td>请假类型:</td>
+					<td><input type="text" id="leaveType" name="leaveType"
+						class="easyui-validatebox" required="true" /></td>
+					<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
+					<td>请假天数:</td>
+					<td><input type="text" id="leaveDays" name="leaveDays"
+						class="easyui-validatebox" required="true" /></td>
+				</tr>
+				<tr>
+					<td><input id="id" type="hidden" name="id" /><input
+						id="processInstanceId" type="hidden" name="processInstanceId" /></td>
+				</tr>
+				<tr>
+					<td valign="top">请假原因：</td>
+					<td colspan="4"><textarea id="leaveReason" name="leaveReason"
+							rows="2" cols="49" class="easyui-validatebox" required="true"></textarea>
+					</td>
+				</tr>
+			</table>
+		</form>
+	</div>
+
+	<div id="cdlg-buttons">
+		<a href="javascript:checkData()" class="easyui-linkbutton"
+			iconCls="icon-ok">保存</a> <a href="javascript:closeChangeDialog()"
+			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
+
+	<div id="dlg10" class="easyui-dialog"
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		<img id="simg" src="" alt="流程图片">
 	</div>
 </body>
 </html>

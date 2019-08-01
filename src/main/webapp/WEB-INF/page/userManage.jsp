@@ -221,9 +221,8 @@
 		</div>
 	</div>
 
-	<div id="dlg" class="easyui-window"
-		style="width: 620px; height: 250px; padding: 10px 20px" closed="true"
-		buttons="#dlg-buttons">
+	<div id="dlg" class="easyui-dialog"
+		style="width: 620px; height: 250px; padding: 10px 20px" closed="true" buttons="#dlg-buttons">
 
 		<form id="fm" method="post">
 			<table cellpadding="8px">
@@ -254,7 +253,6 @@
 				</tr>
 			</table>
 		</form>
-
 	</div>
 
 	<div id="dlg-buttons">

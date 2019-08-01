@@ -13,7 +13,11 @@ public interface LeaveService {
 	public int addLeave(Leave leave);
 	public Leave findById(String id);
 	
+	public Leave findByProcessInstanceId(String processInstanceId);
+	
 	public int updateLeave(Leave leave);
+	
+	public int updateLeaveData(Leave leave);
 	
 	public Leave getLeaveByTaskId(String processInstanceId);
 }

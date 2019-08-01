@@ -92,4 +92,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		update act_id_user set pwd_= #{password}  where id_=#{id}
 	</update>
 	
+	<select id="getToAddress" parameterType="Map" resultType="String" >
+		select email_ from act_id_user where id_=#{userId}
+	</select>
+	
 </mapper> 

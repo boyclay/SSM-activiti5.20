@@ -37,4 +37,14 @@ public class LeaveServiceImpl implements LeaveService{
 	public Leave getLeaveByTaskId(String processInstanceId){
 		return leaveDao.getLeaveByTaskId(processInstanceId);
 	}
+
+	@Override
+	public Leave findByProcessInstanceId(String processInstanceId) {
+		return leaveDao.findByProcessInstanceId(processInstanceId);
+	}
+
+	@Override
+	public int updateLeaveData(Leave leave) {
+		return leaveDao.updateLeaveData(leave);
+	}
 }

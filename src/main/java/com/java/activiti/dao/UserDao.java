@@ -58,4 +58,11 @@ public interface UserDao {
 	 * @return
 	 */
 	public void modifyPassword(User user);
+	
+	/**
+	 * ·¢ËÍÓÊ¼ş
+	 * @param map
+	 * @return
+	 */
+	public String getToAddress(Map<String, String> map);
 }

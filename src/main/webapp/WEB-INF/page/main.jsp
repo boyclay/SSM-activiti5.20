@@ -131,6 +131,7 @@
 </div>
 <div region="west" style="width: 200px;" title="导航菜单" split="true">
 	<div class="easyui-accordion" data-options="fit:true,border:false">
+		<!--  这里也可以通过shiro控制-->
 	    <c:if test="${currentMemberShip.group.name=='管理员' }">
 			<div title="员工管理" data-options="selected:true,iconCls:'icon-item'" style="padding: 10px">
 				<a href="javascript:openTab('用户管理','userManage','icon-user')" class="easyui-linkbutton" data-options="plain:true,iconCls:'icon-user'" style="width: 150px">用户管理</a>
