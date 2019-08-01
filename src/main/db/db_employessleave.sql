@@ -333,7 +333,7 @@ CREATE TABLE `act_id_user` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 
 
-INSERT INTO `act_id_user` VALUES ('wqb', NULL, 'Îº', 'Çì²©', '2628894322@qq.com', '123456', NULL);
+INSERT INTO `act_id_user` VALUES ('wqb', NULL, 'Îº', '¶¨¹ú', '*********@qq.com', '123456', NULL);
 
 -- ----------------------------
 -- Table structure for `act_procdef_info`
