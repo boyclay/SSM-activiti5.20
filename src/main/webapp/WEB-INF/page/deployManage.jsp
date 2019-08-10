@@ -92,7 +92,7 @@
  	<a href="javascript:searchDeploy()" class="easyui-linkbutton" iconCls="icon-search" plain="true">搜索</a>
  </div>
 </div>
-<div id="dlg" class="easyui-dialog" style="width: 320px;height: 150px;padding: 10px 20px" closed="true" buttons="#dlg-buttons">
+<div id="dlg" class="easyui-dialog" style="width: 320px;height: 150px;padding: 10px 20px" closed="true" closable="false" buttons="#dlg-buttons">
  
  	<form id="fm" method="post" enctype="multipart/form-data">
  		<input type="file" name="deployFile" class="easyui-validatebox" required="true"/>

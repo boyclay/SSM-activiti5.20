@@ -20,7 +20,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</select>
 	
 	 <select id="userPage" parameterType="Map" resultMap="UserResult">
-		select * from act_id_user
+		select id_,first_,last_,email_ from act_id_user
 		<where>
 			<if test="id!=null and id!='' ">
 				 and id_ like #{id}
@@ -80,9 +80,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			</if>
 			<if test="email!=null and email!='' ">
 				email_=#{email},
-			</if>
-			<if test="password!=null and password!='' ">
-				pwd_=#{password},
 			</if>
 		</set>
 		where id_=#{id}

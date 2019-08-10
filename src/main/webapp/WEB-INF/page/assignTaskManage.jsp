@@ -177,7 +177,7 @@
 	</div>
 
 	<div id="dlg2" class="easyui-dialog" url=""
-		style="width: 750px; height: 250px; padding: 10px 20px" closed="true">
+		style="width: 750px; height: 250px; padding: 10px 20px" closed="true" closable="false">
 		<table id="dg2" title="批注列表" class="easyui-datagrid" url=""
 			fitColumns="true" style="width: 700px; height: 200px;">
 			<thead>
@@ -191,7 +191,7 @@
 	</div>
 
 	<div id="dlg3" class="easyui-dialog" url=""
-		style="width: 1050px; height: 550px; padding: 10px 20px" closed="true">
+		style="width: 1050px; height: 550px; padding: 10px 20px" closed="true" closable="false">
 		<form id="fm" method="post">
 			<table cellspacing="8px">
 				<tr>
@@ -225,7 +225,7 @@
 	</div>
 
 	<div id="dlg4" class="easyui-dialog"
-		style="width: 620px; height: 280px; padding: 10px 20px" closed="true"
+		style="width: 620px; height: 280px; padding: 10px 20px" closed="true" closable="false"
 		buttons="#dlg-buttons">
 
 		<form id="gfm" method="post">
@@ -261,7 +261,7 @@
 	
 	
 	<div id="dlg10" class="easyui-dialog"
-		style="width: 900px; height: 400px; padding: 100px 20px" closed="true">
+		style="width: 900px; height: 400px; padding: 100px 20px" closed="true" >
 		<img id="simg" src="" alt="流程图片">
 	</div>
 

@@ -14,7 +14,11 @@ import net.sf.json.JSONObject;
 
 import org.activiti.engine.IdentityService;
 import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.authc.AuthenticationException;
+import org.apache.shiro.authc.ExcessiveAttemptsException;
+import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
+import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +33,8 @@ import com.java.activiti.service.GroupService;
 import com.java.activiti.service.MemberShipService;
 import com.java.activiti.service.UserService;
 import com.java.activiti.util.ResponseUtil;
+import com.java.activiti.util.ShiroMD5Util;
+import com.java.activiti.util.serfg;
 
 /**
  * 用户管理
@@ -62,20 +68,66 @@ public class UserController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/userLogin")
-	public String userLogin(HttpServletResponse response, HttpServletRequest request) throws Exception {
+	public String userLogin(HttpServletResponse response, HttpServletRequest request,Boolean rememberMe) throws Exception {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("userName", request.getParameter("userName"));
 		map.put("password", request.getParameter("password"));
 		map.put("groupId", request.getParameter("groupId"));
-		MemberShip memberShip = menberShipService.userLogin(map);
-
 		JSONObject result = new JSONObject();
-		if (memberShip == null) {
-			result.put("success", false);
-			result.put("errorInfo", "用户名或者密码错误！");
-		} else {
+		Subject user = SecurityUtils.getSubject();
+		UsernamePasswordToken token = new UsernamePasswordToken(map.get("userName").toString(),
+				map.get("password").toString());
+		Boolean flag = rememberMe!=null?true:false;
+		try {
+			token.setRememberMe(flag);
+			user.login(token);
+			user.checkRole(map.get("groupId").toString());
+			MemberShip memberShip = menberShipService.userLogin(map);//这个地方为了显示
 			result.put("success", true);
 			request.getSession().setAttribute("currentMemberShip", memberShip);
+		} catch (LockedAccountException lae) {
+			token.clear();
+			result.put("success", false);
+			result.put("errorInfo", "用户已经被锁定不能登录，请与管理员联系！");
+		} catch (ExcessiveAttemptsException e) {
+			token.clear();
+			result.put("success", false);
+			result.put("errorInfo", "失败次数过多！");
+		} catch (AuthenticationException e) {
+			token.clear();
+			result.put("success", false);
+			result.put("errorInfo", "用户名或者密码错误！");
+		}catch (UnauthorizedException e) {
+			token.clear();
+			result.put("success", false);
+			result.put("errorInfo", "用户没有当前角色！");
+		}
+		ResponseUtil.write(response, result);
+		return null;
+	}
+	
+	
+	/**
+	 * 
+	 * 密码校验
+	 * 
+	 * @param response
+	 * @param request
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/checkPassword")
+	public String checkPassword(HttpServletResponse response, HttpServletRequest request,User checkUser) throws Exception {
+		Map<String, Object> map = new HashMap<String, Object>();
+		JSONObject result = new JSONObject();
+		Subject user = SecurityUtils.getSubject();
+		UsernamePasswordToken token = new UsernamePasswordToken(checkUser.getId(),
+				checkUser.getPassword());
+		try {
+			user.login(token);
+			result.put("success", true);
+		}catch (Exception e) {
+			result.put("success", false);
 		}
 		ResponseUtil.write(response, result);
 		return null;
@@ -129,8 +181,9 @@ public class UserController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/updateUser")
-	public String updateUser(HttpServletResponse response, User uses) throws Exception {
-		int result = userService.updateUser(uses);
+	public String updateUser(HttpServletResponse response, User user) throws Exception {
+		user.setPassword(ShiroMD5Util.getMD5Password(user.getPassword()));
+		int result = userService.updateUser(user);
 		JSONObject json = new JSONObject();
 		if (result > 0) {
 			json.put("success", true);
@@ -180,6 +233,7 @@ public class UserController {
 	 */
 	@RequestMapping("/userSave")
 	public String userSave(HttpServletResponse response, User user) throws Exception {
+		user.setPassword(ShiroMD5Util.getMD5Password(user.getPassword()));
 		int userResult = userService.addUser(user);
 		JSONObject json = new JSONObject();
 		if (userResult > 0) {
@@ -262,6 +316,7 @@ public class UserController {
 	public String modifyPassword(HttpServletResponse response, User user) throws Exception {
 		JSONObject json = new JSONObject();
 		try {
+			user.setPassword(ShiroMD5Util.getMD5Password(user.getPassword()));
 			userService.modifyPassword(user);
 			json.put("success", true);
 		} catch (Exception e) {
@@ -290,21 +345,22 @@ public class UserController {
 		return null;
 	}
 
-//	/**
-//	 * 登出
-//	 * 
-//	 * @return
-//	 * @throws Exception
-//	 */
-//	@RequestMapping("/logout")
-//	@ResponseBody
-//	public String logout(HttpServletResponse response, HttpServletRequest request) {
-//		request.getSession().removeAttribute("currentMemberShip");
-//		JSONObject json = new JSONObject();
-//		json.put("success", true);
-//		ResponseUtil.write(response, json);
-//		return null;
-//	}
+	// /**
+	// * 登出
+	// *
+	// * @return
+	// * @throws Exception
+	// */
+	// @RequestMapping("/logout")
+	// @ResponseBody
+	// public String logout(HttpServletResponse response, HttpServletRequest
+	// request) {
+	// request.getSession().removeAttribute("currentMemberShip");
+	// JSONObject json = new JSONObject();
+	// json.put("success", true);
+	// ResponseUtil.write(response, json);
+	// return null;
+	// }
 
 	/**
 	 * 主页面
@@ -329,6 +385,11 @@ public class UserController {
 	@RequestMapping("/authManage")
 	public String authManage() {
 		return "page/authManage";
+	}
+
+	@RequestMapping("/resourcesManage")
+	public String resourcesManage() {
+		return "page/resourcesManage";
 	}
 
 	@RequestMapping("/deployManage")
@@ -381,6 +442,14 @@ public class UserController {
 		return "page/claimTaskManage";
 	}
 	
+	@RequestMapping("/code")
+	@ResponseBody
+	public String code() {
+		serfg.test();
+		return null;
+	}
+
+
 	@RequestMapping("/logout")
 	public String logout(HttpServletResponse response, HttpServletRequest request) {
 		JSONObject json = new JSONObject();
@@ -388,6 +457,7 @@ public class UserController {
 		ResponseUtil.write(response, json);
 		return null;
 	}
+
 	@RequestMapping("/redirectUrlLogin")
 	public String redirectUrlLogin(HttpServletResponse response, HttpServletRequest request) {
 		JSONObject json = new JSONObject();

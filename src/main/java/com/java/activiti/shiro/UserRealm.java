@@ -18,8 +18,10 @@ import org.apache.shiro.realm.AuthorizingRealm;
 import org.apache.shiro.subject.PrincipalCollection;
 
 import com.java.activiti.model.Group;
+import com.java.activiti.model.Resources;
 import com.java.activiti.model.User;
 import com.java.activiti.service.GroupService;
+import com.java.activiti.service.ResourcesService;
 import com.java.activiti.service.UserService;
 
 public class UserRealm extends AuthorizingRealm {
@@ -29,18 +31,26 @@ public class UserRealm extends AuthorizingRealm {
 	
 	@Resource
 	private GroupService groupService;
+	
+	@Resource
+	private ResourcesService resourcesService;
 
 	@Override
 	protected AuthorizationInfo doGetAuthorizationInfo(PrincipalCollection principals) {
 		String username = principals.getPrimaryPrincipal().toString();
-		List<Group> groupList = groupService.findByUserId(username);
+		List<Group> groupList = groupService.findByUserId(username);//获取组
+		List<Resources> resourceList = resourcesService.getPermissions(username);//获取组
 		Set<String> roles= new HashSet<String>();
 		for(Group group:groupList){
 			roles.add(group.getId());
 		}
+		Set<String> permissions= new HashSet<String>();
+		for(Resources resource:resourceList){
+			permissions.add(resource.getResurl());
+		}
 		SimpleAuthorizationInfo authorizationInfo = new SimpleAuthorizationInfo();
 		authorizationInfo.setRoles(roles);//设置角色
-		authorizationInfo.setStringPermissions(null);//设置增删改查的权限
+		authorizationInfo.setStringPermissions(permissions);//设置增删改查的权限
 		return authorizationInfo;
 	}
 

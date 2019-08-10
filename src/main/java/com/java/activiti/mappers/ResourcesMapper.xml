@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.java.activiti.dao.ResourcesDao">
+	<resultMap type="resources" id="ResourcesResult">
+		<result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="resurl" column="resUrl" />
+		<result property="type" column="type" />
+		<result property="parentId" column="parentId" />
+		<result property="sort" column="sort" />
+	</resultMap>
+
+	<select id="resourcesPage" parameterType="Map" resultMap="ResourcesResult">
+		select * from resources
+		<if test="pageIndex!=null and pageSize!=null">
+			limit #{pageIndex},#{pageSize}
+		</if>
+	</select>
+
+	<select id="resourcesCount" parameterType="Map" resultType="int">
+		select count(1) from resources
+	</select>
+
+	<delete id="deleteResources" parameterType="java.util.List">
+		delete from resources where id in
+		<foreach collection="list" item="id" index="index" open="("
+			separator="," close=")">
+			#{id}
+		</foreach>
+	</delete>
+
+	<insert id="addResources" parameterType="resources">
+		insert into resources
+		values(null,#{name},#{resurl},#{type},#{parentId},#{sort});
+	</insert>
+
+	<update id="updateResources" parameterType="resources">
+		update resources
+		<set>
+			<if test="resurl!=null and resurl!='' ">
+				resurl=#{resurl},
+			</if>
+			<if test="sort!=null and sort!='' ">
+				sort=#{sort},
+			</if>
+			<if test="type!=null and type!='' ">
+				type=#{type},
+			</if>
+			<if test="parentId!=null and parentId!='' ">
+				parentId=#{parentId},
+			</if>
+		</set>
+		where name=#{name}
+	</update>
+
+	<select id="existResourcesName" parameterType="resources"
+		resultType="int">
+		select count(*) from resources where name=#{name}
+	</select>
+
+	<select id="getAllResources" resultMap="ResourcesResult">
+		SELECT
+		re.id,re.name,re.parentId,re.resUrl resurl,re.type,
+		(CASE WHEN
+		EXISTS(SELECT 1
+		FROM role_resources rr WHERE rr.pid=re.id AND
+		rr.rid=#{groupId})
+		THEN 'true' ELSE 'false' END) AS isChecked
+		FROM
+		resources re
+		WHERE re.parentId !=0
+		ORDER BY re.sort ASC
+	</select>
+
+	<insert id="addRoleResources" parameterType="map">
+		insert into
+		role_resources values(#{groupId},#{resourcesId});
+	</insert>
+
+	<delete id="deleteRoleResources" parameterType="map">
+		delete from
+		role_resources where rid=#{groupId}
+	</delete>
+
+	<select id="getPermissions" resultMap="ResourcesResult">
+		SELECT
+		rs.`resUrl` resurl
+		FROM resources rs
+		LEFT JOIN role_resources rr ON rs.id = rr.pid
+		LEFT
+		JOIN act_id_membership m ON m.GROUP_ID_=rr.rid
+		LEFT JOIN act_id_user u
+		ON u.ID_=m.USER_ID_ WHERE u.ID_=#{username}
+	</select>
+</mapper> 

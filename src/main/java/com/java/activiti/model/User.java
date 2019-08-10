@@ -1,12 +1,15 @@
 package com.java.activiti.model;
 
+import java.io.Serializable;
+
 /**
  * 用户扩展实体
  * @author user
  *
  */
-public class User {
+public class User implements Serializable {
 
+	private static final long serialVersionUID = 5596438259170985095L;
 	private String id; // 主键 用户名
 	private String firstName;  // 姓
 	private String lastName; // 名

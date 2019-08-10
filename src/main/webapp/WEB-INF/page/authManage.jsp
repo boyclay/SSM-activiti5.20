@@ -105,7 +105,7 @@
  </div>
 </div>
 
-<div id="dlg" class="easyui-dialog" style="width: 450px;height: 200px;padding: 10px 20px" closed="true" buttons="#dlg-buttons">
+<div id="dlg" class="easyui-dialog" style="width: 450px;height: 200px;padding: 10px 20px" closed="true" closable="false" buttons="#dlg-buttons">
  
  	<div id="groupsList" style="padding: 10px"></div>
  

@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@taglib prefix="shiro" uri="http://shiro.apache.org/tags"%>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
@@ -16,6 +17,79 @@
 <script type="text/javascript"
 	src="${pageContext.request.contextPath}/static/jquery-easyui-1.3.3/locale/easyui-lang-zh_CN.js"></script>
 <script type="text/javascript">
+	function openAuthDiglog() {
+		var selectRows = $("#dg").datagrid("getSelections");
+		if (selectRows.length != 1) {
+			$.messager.alert("系统提示", "请选择一条要设置的用户！");
+			return;
+		}
+		var row = selectRows[0];
+		$("#dlg2").dialog("open").dialog("setTitle", "设置用户权限");
+		loadAllGroups(); // 加载所有角色
+		//延时加载！！！！！2019/06/03
+		setRoles(selectRows[0].id);
+		url = "${pageContext.request.contextPath}/memberShip/updateMemberShip.action?userId="
+				+ selectRows[0].id;
+	}
+	function loadAllGroups() {
+		$
+				.post(
+						"${pageContext.request.contextPath}/group/listAllGroups.action",
+						{},
+						function(result) {
+							var groupList = result.groupList;
+							$("#groupsList").empty();
+							for ( var key in groupList) {
+								var cbStr = '<input type="checkbox" name="groupId" value="'+groupList[key].id+'" />'
+										+ '<font>'
+										+ groupList[key].name
+										+ '</font>' + '&nbsp;';
+								$("#groupsList").append(cbStr);
+							}
+						}, "json");
+	}
+
+	function setRoles(userId) {
+		$
+				.post(
+						"${pageContext.request.contextPath}/group/findGroupByUserId.action",
+						{
+							userId : userId
+						}, function(result) {
+							var groups = result.groups;
+							var groupsArr = groups.split(",");
+							for (var i = 0; i < groupsArr.length; i++) {
+								$("[value=" + groupsArr[i] + "]:checkbox")
+										.attr("checked", true);
+							}
+						}, "json");
+	}
+
+	function saveAuth() {
+		var obj = document.getElementsByName("groupId");
+		var s = '';
+		for (var i = 0; i < obj.length; i++) {
+			if (obj[i].checked) {
+				s += obj[i].value + ',';
+			}
+		}
+		$.post(url, {
+			groupsIds : s.substring(0, s.length - 1)
+		}, function(result) {
+			if (result.success) {
+				$.messager.alert("系统提示", "提交成功！");
+				closeAuthDialog();
+				$("#dg").datagrid("reload");
+			} else {
+				$.messager.alert("系统提示", "提交失败，请联系管理员！");
+			}
+		}, "json");
+	}
+
+	function closeAuthDialog() {
+		$("#dlg2").dialog("close");
+	}
+
 	function qq(name, value) {
 		if (value == 'id') {
 			$("#dg").datagrid('load', {
@@ -87,10 +161,9 @@
 	}
 
 	function openUserAddDiglog() {
-		$("#dlg").window("open");
-// 		$("#dlg").dialog("open").dialog("setTitle", "添加用户信息");
-// 		$("#flag").val(1);
-// 		$("#id").attr("readonly", false);
+		$("#dlg").dialog("open").dialog("setTitle", "添加用户信息");
+		$("#flag").val(1);
+		$("#id").attr("readonly", false);
 	}
 
 	function openUserModifyDiglog() {
@@ -103,6 +176,8 @@
 		$("#dlg").dialog("open").dialog("setTitle", "编辑用户信息");
 		$("#fm").form("load", row);
 		$("#flag").val(2);
+		$("#ptword").hide();
+		$("#pt").hide();
 		$("#id").attr("readonly", true);
 	}
 
@@ -134,6 +209,8 @@
 		$("#fm").form("submit", {
 			url : '${pageContext.request.contextPath}/user/updateUser.action',
 			onSubmit : function() {
+				$('#password').validatebox({required:false});
+// 				$('#password').removeClass('easyui-validatebox');
 				return $(this).form("validate");
 			},
 			success : function(result) {
@@ -178,6 +255,9 @@
 		$("#firstName").val("");
 		$("#lastName").val("");
 		$("#email").val("");
+		$("#ptword").show();
+		$("#pt").show();
+		$('#password').validatebox({required:true});
 	}
 
 	function closeUserDialog() {
@@ -195,7 +275,6 @@
 			<tr>
 				<th field="cb" checkbox="true" align="center"></th>
 				<th field="id" width="80" align="center">用户名</th>
-				<th field="password" width="80" align="center">密码</th>
 				<th field="firstName" width="50" align="center">姓</th>
 				<th field="lastName" width="50" align="center">名</th>
 				<th field="email" width="100" align="center">邮箱</th>
@@ -204,12 +283,22 @@
 	</table>
 	<div id="tb">
 		<div>
-			<a href="javascript:openUserAddDiglog()" class="easyui-linkbutton"
-				iconCls="icon-add" plain="true">添加</a> <a
-				href="javascript:openUserModifyDiglog()" class="easyui-linkbutton"
-				iconCls="icon-edit" plain="true">修改</a> <a
-				href="javascript:deleteUser()" class="easyui-linkbutton"
-				iconCls="icon-remove" plain="true">删除</a>
+			<shiro:hasPermission name="/userManage/add">
+				<a href="javascript:openUserAddDiglog()" class="easyui-linkbutton"
+					iconCls="icon-add" plain="true">添加</a>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="/userManage/update">
+				<a href="javascript:openUserModifyDiglog()"
+					class="easyui-linkbutton" iconCls="icon-edit" plain="true">修改</a>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="/userManage/delete">
+				<a href="javascript:deleteUser()" class="easyui-linkbutton"
+					iconCls="icon-remove" plain="true">删除</a>
+			</shiro:hasPermission>
+			<shiro:hasPermission name="/userManage/permission">
+				<a href="javascript:openAuthDiglog()" class="easyui-linkbutton"
+					iconCls="icon-power" plain="true">授权</a>
+			</shiro:hasPermission>
 		</div>
 		<input id="ss" class="easyui-searchbox" style="width: 300px"
 			data-options="searcher:qq,prompt:'Please Input Value',menu:'#mm'"></input>
@@ -222,7 +311,8 @@
 	</div>
 
 	<div id="dlg" class="easyui-dialog"
-		style="width: 620px; height: 250px; padding: 10px 20px" closed="true" buttons="#dlg-buttons">
+		style="width: 620px; height: 250px; padding: 10px 20px" closed="true" closable="false"
+		buttons="#dlg-buttons">
 
 		<form id="fm" method="post">
 			<table cellpadding="8px">
@@ -231,8 +321,8 @@
 					<td><input type="text" id="id" name="id"
 						class="easyui-validatebox" required="true" /></td>
 					<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
-					<td>密码：</td>
-					<td><input type="text" id="password" name="password"
+					<td id="ptword">密码：</td>
+					<td id="pt"><input type="text" id="password" name="password"
 						class="easyui-validatebox" required="true" /></td>
 				</tr>
 				<tr>
@@ -258,6 +348,19 @@
 	<div id="dlg-buttons">
 		<a href="javascript:checkData()" class="easyui-linkbutton"
 			iconCls="icon-ok">保存</a> <a href="javascript:closeUserDialog()"
+			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
+
+
+	<div id="dlg2" class="easyui-dialog"
+		style="width: 450px; height: 200px; padding: 10px 20px" closed="true" closable="false"
+		buttons="#dlg2-buttons">
+		<div id="groupsList" style="padding: 10px"></div>
+	</div>
+
+	<div id="dlg2-buttons">
+		<a href="javascript:saveAuth()" class="easyui-linkbutton"
+			iconCls="icon-ok">保存</a> <a href="javascript:closeAuthDialog()"
 			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
 	</div>
 </body>

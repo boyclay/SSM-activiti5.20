@@ -29,7 +29,6 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 				 act_id_user as u
 		    where m.GROUP_ID_=g.ID_ and 
 				  m.USER_ID_=u.ID_  and 
-				  u.PWD_=#{password} and 
 		      	  u.ID_=#{userName}  and
 				  g.ID_=#{groupId} 
 	</select>

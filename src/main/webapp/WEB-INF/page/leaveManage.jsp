@@ -201,7 +201,7 @@
 	</div>
 
 	<div id="dlg" class="easyui-dialog"
-		style="width: 620px; height: 280px; padding: 10px 20px" closed="true"
+		style="width: 620px; height: 280px; padding: 10px 20px" closed="true" closable="false"
 		buttons="#dlg-buttons">
 
 		<form id="fm" method="post">
@@ -254,7 +254,7 @@
 
 
 	<div id="dlg3" class="easyui-dialog"
-		style="width: 620px; height: 250px; padding: 10px 20px" closed="true"
+		style="width: 620px; height: 250px; padding: 10px 20px" closed="true" closable="false"
 		buttons="#cdlg-buttons">
 
 		<form id="changfm" method="post">
