@@ -275,9 +275,9 @@
 					style="padding: 10px">
 					<shiro:hasPermission name="/taskManage/claimTaskManage">
 						<a
-							href="javascript:openTab('签收任务管理','claimTaskManage','icon-lishi')"
+							href="javascript:openTab('签收任务管理','claimTaskManage','icon-claim')"
 							class="easyui-linkbutton"
-							data-options="plain:true,iconCls:'icon-lishi'"
+							data-options="plain:true,iconCls:'icon-claim'"
 							style="width: 150px;">签收任务管理</a>
 					</shiro:hasPermission>
 					<shiro:hasPermission name="/taskManage/daibanManage">
@@ -301,16 +301,16 @@
 							style="width: 150px;">历史任务管理</a>
 					</shiro:hasPermission>
 					<shiro:hasPermission name="/taskManage/deTaskManage">
-						<a href="javascript:openTab('委派任务管理','deTaskManage','icon-lishi')"
+						<a href="javascript:openTab('委派任务管理','deTaskManage','icon-deTask')"
 							class="easyui-linkbutton"
-							data-options="plain:true,iconCls:'icon-lishi'"
+							data-options="plain:true,iconCls:'icon-deTask'"
 							style="width: 150px;">委派任务管理</a>
 					</shiro:hasPermission>
 					<shiro:hasPermission name="/taskManage/assignTaskManage">
 						<a
-							href="javascript:openTab('指派任务管理','assignTaskManage','icon-lishi')"
+							href="javascript:openTab('指派任务管理','assignTaskManage','icon-assignTask')"
 							class="easyui-linkbutton"
-							data-options="plain:true,iconCls:'icon-lishi'"
+							data-options="plain:true,iconCls:'icon-assignTask'"
 							style="width: 150px;">指派任务管理</a>
 					</shiro:hasPermission>
 				</div>
@@ -327,10 +327,10 @@
 				</div>
 			</shiro:hasPermission>
 			<shiro:hasPermission name="/codeManage">
-			<div title="代码管理" data-options="iconCls:'icon-yewu'"
+			<div title="代码管理" data-options="iconCls:'icon-codeManage'"
 				style="padding: 10px">
 				<a href="javascript:openCodeDialog()" class="easyui-linkbutton"
-					data-options="plain:true,iconCls:'icon-modifyPassword'"
+					data-options="plain:true,iconCls:'icon-codeGenerate'"
 					style="width: 150px;">代码生成</a>
 			</div>
 			</shiro:hasPermission>

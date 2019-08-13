@@ -108,7 +108,7 @@
 }
 
 .icon-flow{
-	background:url('usericons/flow.png') no-repeat center center;
+	background:url('usericons/2012080111634.png') no-repeat center center;
 }
 
 .icon-design{
@@ -138,6 +138,26 @@
 
 .icon-yiban{
 	background:url('usericons/yiban.png') no-repeat center center;
+}
+
+.icon-claim{
+	background:url('usericons/basket_edit.png') no-repeat center center;
+}
+
+.icon-deTask{
+	background:url('usericons/book.png') no-repeat center center;
+}
+
+.icon-assignTask{
+	background:url('usericons/bookmark.png') no-repeat center center;
+}
+
+.icon-codeManage{
+	background:url('usericons/definition.png') no-repeat center center;
+}
+
+.icon-codeGenerate{
+	background:url('usericons/new.png') no-repeat center center;
 }
 
 .icon-lishi{
