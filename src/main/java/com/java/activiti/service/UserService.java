@@ -64,6 +64,11 @@ public interface UserService {
 	 * @return
 	 */
 	public void sendMail(Map<String,String> map);
+	
+	/**
+	 * 获取所有表名
+	 * @param map
+	 * @return
+	 */
+	public List<Map> getTableName();
 }
-
-

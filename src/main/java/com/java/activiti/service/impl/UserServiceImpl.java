@@ -84,4 +84,8 @@ public class UserServiceImpl implements UserService{
 		map.put("toaddress", userDao.getToAddress(map));
 		MailUtil.sendMail(map);
 	}
+	@Override
+	public List<Map>  getTableName() {
+		return userDao.getTableName();
+	}
 }

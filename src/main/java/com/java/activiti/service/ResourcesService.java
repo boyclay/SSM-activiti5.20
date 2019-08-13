@@ -13,7 +13,7 @@ public interface ResourcesService {
 	 * @param map
 	 * @return
 	 */
-	public List<Resources> resourcesPage(Map<String, Object> map);
+	 List<Resources> resourcesPage(Map<String, Object> map);
 
 	/**
 	 * 统计数量

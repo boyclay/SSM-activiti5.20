@@ -48,11 +48,54 @@
 		$("#dlg").dialog("open").dialog("setTitle", "修改密码");
 	}
 
+	function openCodeDialog() {
+		$('#tableName')
+				.combobox(
+						{
+							onShowPanel : function() {
+								$(this).combobox('options').url = "${pageContext.request.contextPath}/user/getTableName.action";
+								$(this).combobox('reload');
+							},
+						});
+		$("#dlg4").dialog("open").dialog("setTitle", "代码生成");
+	}
+
+	function codeGenerate() {
+		$("#cfm")
+				.form(
+						"submit",
+						{
+							url : '${pageContext.request.contextPath}/user/codeGenerate.action',
+							onSubmit : function() {
+								if ($("#tableName").combobox("getValue") == "请选择") {
+									$.messager.alert("系统提示", "请选择组！");
+									return false;
+								}
+								return $(this).form("validate");
+							},
+							success : function(result) {
+								var result = eval('(' + result + ')');
+								if (result.success) {
+									$.messager.alert("系统系统", "生成成功！");
+									$("#dlg4").dialog("close");
+								} else {
+									$.messager.alert("系统系统", "生成失败！");
+									return;
+								}
+							}
+						});
+	}
+
+	function closeCodeGenerate() {
+		$("#dlg4").dialog("close");
+	}
+
 	function checkPassword(oldPassword) {
 		$
 				.post(
 						"${pageContext.request.contextPath}/user/checkPassword.action?id=${currentMemberShip.user.id}&password="
-								+ oldPassword + "", function(result) {
+								+ oldPassword + "",
+						function(result) {
 							if (result.success) {
 								var newPassword = $("#newPassword").val();
 								$("#fm")
@@ -62,32 +105,48 @@
 													url : "${pageContext.request.contextPath}/user/modifyPassword.do?id=${currentMemberShip.user.id}&password="
 															+ newPassword + "",
 													onSubmit : function() {
-														var newPassword = $("#newPassword").val();
-														var newPassword2 = $("#newPassword2").val();
-														if (!$(this).form("validate")) {
+														var newPassword = $(
+																"#newPassword")
+																.val();
+														var newPassword2 = $(
+																"#newPassword2")
+																.val();
+														if (!$(this).form(
+																"validate")) {
 															return false;
 														}
 														if (oldPassword == newPassword) {
-															$.messager.alert("系统系统",
-																	"新老密码相同,请耐心考虑！");
+															$.messager
+																	.alert(
+																			"系统系统",
+																			"新老密码相同,请耐心考虑！");
 															return false;
 														}
 														if (newPassword != newPassword2) {
-															$.messager.alert("系统系统", "确认密码输入错误！");
+															$.messager
+																	.alert(
+																			"系统系统",
+																			"确认密码输入错误！");
 															return false;
 														}
 														return true;
 													},
 													success : function(result) {
-														var result = eval('(' + result + ')');
+														var result = eval('('
+																+ result + ')');
 														if (result.success) {
-															$.messager.alert("系统系统",
-																	"密码修改成功，下一次登录生效！");
+															$.messager
+																	.alert(
+																			"系统系统",
+																			"密码修改成功，下一次登录生效！");
 															resetValue();
-															$("#dlg").dialog("close");
+															$("#dlg").dialog(
+																	"close");
 														} else {
-															$.messager.alert("系统系统",
-																	"密码修改失败，请联系管理员！");
+															$.messager
+																	.alert(
+																			"系统系统",
+																			"密码修改失败，请联系管理员！");
 															return;
 														}
 													}
@@ -101,7 +160,7 @@
 
 	function modifyPassword() {
 		var oldPassword = $("#oldPassword").val();
-		checkPassword(oldPassword); 
+		checkPassword(oldPassword);
 	}
 
 	function resetValue() {
@@ -267,12 +326,14 @@
 					</shiro:hasPermission>
 				</div>
 			</shiro:hasPermission>
+			<shiro:hasPermission name="/codeManage">
 			<div title="代码管理" data-options="iconCls:'icon-yewu'"
 				style="padding: 10px">
-				<a href="javascript:openTab('代码生成','code','icon-apply')"
-					class="easyui-linkbutton"
-					data-options="plain:true,iconCls:'icon-apply'" style="width: 150px">代码生成</a>
+				<a href="javascript:openCodeDialog()" class="easyui-linkbutton"
+					data-options="plain:true,iconCls:'icon-modifyPassword'"
+					style="width: 150px;">代码生成</a>
 			</div>
+			</shiro:hasPermission>
 			<div title="系统管理" data-options="iconCls:'icon-system'"
 				style="padding: 10px">
 				<a href="javascript:openPasswordModifyDialog()"
@@ -316,7 +377,6 @@
 				</tr>
 			</table>
 		</form>
-
 	</div>
 
 	<div id="dlg-buttons">
@@ -326,5 +386,26 @@
 			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
 	</div>
 
+	<div id="dlg4" class="easyui-dialog"
+		style="width: 400px; height: 250px; padding: 10px 20px" closed="true"
+		closable="false" buttons="#dlg4-buttons">
+		<form id="cfm" method="post">
+			<table cellpadding="8px">
+				<tr>
+					<td>数据库表：</td>
+					<td><input id="tableName" name="tableName"
+						class="easyui-combobox"
+						data-options="panelHeight:200,valueField:'table_name',textField:'table_name'"
+						value="请选择" /></td>
+				</tr>
+			</table>
+		</form>
+	</div>
+
+	<div id="dlg4-buttons">
+		<a href="javascript:codeGenerate()" class="easyui-linkbutton"
+			iconCls="icon-ok">生成</a> <a href="javascript:closeCodeGenerate()"
+			class="easyui-linkbutton" iconCls="icon-cancel">关闭</a>
+	</div>
 </body>
 </html>

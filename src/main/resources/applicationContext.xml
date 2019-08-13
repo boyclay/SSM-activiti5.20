@@ -16,7 +16,7 @@
 	<!-- shiro -->
 	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
 		<property name="securityManager" ref="securityManager" />
-		<property name="loginUrl" value="login.jsp" />
+<!-- 		<property name="loginUrl" value="/user/doLogin" /> -->
 		<property name="filters">
 			<map>
 				<!--退出过滤器 -->
@@ -25,10 +25,12 @@
 		</property>
 		<property name="filterChainDefinitions">
 			<value>
-				/login.jsp = anon
+<!-- 				/login.jsp = anon -->
 				/user/userLogin.action = anon
 				/group/findGroup.action = anon
 				/user/logout.do = logout
+				/user/main.action = user
+<!-- 			X	/user/doLogin = user -->
 				/* = authc
 			</value>
 		</property>
@@ -60,7 +62,7 @@
 		<constructor-arg value="rememberMe"></constructor-arg>
 		<property name="httpOnly" value="true"></property>
 		<!--cookie 的最大失效时间 30天 -->
-		<property name="maxAge" value="259200"></property>
+		<property name="maxAge" value="10"></property>
 	</bean>
 
 	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
@@ -77,7 +79,7 @@
 		<!--rememberMe 记住我checkbox 是否记住我默认为false -->
 		<property name="rememberMeParam" value="rememberMe" />
 		<!--form 的action -->
-		<property name="loginUrl" value="/user/userLogin" />
+		<property name="loginUrl" value="/user/doLogin" />
 	</bean>
 
 	<!-- 配置数据源 -->

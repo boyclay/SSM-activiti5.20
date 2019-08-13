@@ -93,4 +93,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		select email_ from act_id_user where id_=#{userId}
 	</select>
 	
+	<select id="getTableName" resultType="map" >
+		SELECT table_schema,table_name FROM information_schema.tables WHERE table_schema='db_employessleave' AND table_type='base table'
+	</select>
 </mapper> 

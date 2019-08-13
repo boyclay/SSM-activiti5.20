@@ -10,20 +10,7 @@ import java.util.regex.Pattern;
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
 
 /**
- * RenameMapperPlugin
- *
- * 閲嶅懡鍚嶇敓鎴愮殑Dao绫伙紝鍙互娣诲姞鍓嶇紑鍜屽悗缂�
- * MemberMapper锛屽彲閲嶅懡鍚嶄负锛欼MemberDao
- *
- * mybatis generator config 绀轰緥锛�
- * <plugin type="com.thinkj2ee.cms.mybatis.generator.extend.RenameMapperPlugin">
- * <property name="mapperPreffix" value="I"></property>
- * <property name="mapperSuffix" value="Dao"></property>
- * </plugin>
- *
- * @author 鍑″<jihaoju@qq.com>
- * @copyright thinkj2ee.com
- * @date 2016/11/10
+ * Mapper变成Dao后缀 
  */
 public class RenameMapperPlugin extends PluginAdapter {
 

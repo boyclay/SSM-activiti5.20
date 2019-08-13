@@ -1,18 +1,20 @@
 package com.java.activiti.controller;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import org.activiti.engine.IdentityService;
+import org.apache.commons.io.FileUtils;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.authc.AuthenticationException;
 import org.apache.shiro.authc.ExcessiveAttemptsException;
@@ -20,10 +22,14 @@ import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.UnauthorizedException;
 import org.apache.shiro.subject.Subject;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.java.activiti.model.Group;
 import com.java.activiti.model.MemberShip;
@@ -32,12 +38,16 @@ import com.java.activiti.model.User;
 import com.java.activiti.service.GroupService;
 import com.java.activiti.service.MemberShipService;
 import com.java.activiti.service.UserService;
+import com.java.activiti.util.GeneratorUtil;
 import com.java.activiti.util.ResponseUtil;
 import com.java.activiti.util.ShiroMD5Util;
-import com.java.activiti.util.serfg;
+import com.java.activiti.util.ZipUtil;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
- * ÓÃ»§¹ÜÀí
+ * ç”¨æˆ·ç®¡ç†
  * 
  * @author Administrator
  *
@@ -58,9 +68,10 @@ public class UserController {
 	@Resource
 	private IdentityService identityService;
 
+	public static TreeSet<String> ts = new TreeSet<String>();
+
 	/**
-	 * 
-	 * µÇÈë
+	 * ç™»å…¥
 	 * 
 	 * @param response
 	 * @param request
@@ -68,7 +79,7 @@ public class UserController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/userLogin")
-	public String userLogin(HttpServletResponse response, HttpServletRequest request,Boolean rememberMe) throws Exception {
+	public String userLogin(HttpServletResponse response, HttpServletRequest request) throws Exception {
 		Map<String, Object> map = new HashMap<String, Object>();
 		map.put("userName", request.getParameter("userName"));
 		map.put("password", request.getParameter("password"));
@@ -77,39 +88,38 @@ public class UserController {
 		Subject user = SecurityUtils.getSubject();
 		UsernamePasswordToken token = new UsernamePasswordToken(map.get("userName").toString(),
 				map.get("password").toString());
-		Boolean flag = rememberMe!=null?true:false;
+		// Boolean flag = rememberMe!=null?true:false;
 		try {
-			token.setRememberMe(flag);
+			// token.setRememberMe(flag);//rememberMeåŠŸèƒ½
 			user.login(token);
 			user.checkRole(map.get("groupId").toString());
-			MemberShip memberShip = menberShipService.userLogin(map);//Õâ¸öµØ·½ÎªÁËÏÔÊ¾
+			MemberShip memberShip = menberShipService.userLogin(map);// è¿™ä¸ªåœ°æ–¹ä¸ºäº†æ˜¾ç¤º
 			result.put("success", true);
 			request.getSession().setAttribute("currentMemberShip", memberShip);
 		} catch (LockedAccountException lae) {
 			token.clear();
 			result.put("success", false);
-			result.put("errorInfo", "ÓÃ»§ÒÑ¾­±»Ëø¶¨²»ÄÜµÇÂ¼£¬ÇëÓë¹ÜÀíÔ±ÁªÏµ£¡");
+			result.put("errorInfo", "ç”¨æˆ·å·²ç»è¢«é”å®šä¸èƒ½ç™»å½•ï¼Œè¯·ä¸ç®¡ç†å‘˜è”ç³»ï¼");
 		} catch (ExcessiveAttemptsException e) {
 			token.clear();
 			result.put("success", false);
-			result.put("errorInfo", "Ê§°Ü´ÎÊı¹ı¶à£¡");
+			result.put("errorInfo", "å¤±è´¥æ¬¡æ•°è¿‡å¤šï¼");
 		} catch (AuthenticationException e) {
 			token.clear();
 			result.put("success", false);
-			result.put("errorInfo", "ÓÃ»§Ãû»òÕßÃÜÂë´íÎó£¡");
-		}catch (UnauthorizedException e) {
+			result.put("errorInfo", "ç”¨æˆ·åæˆ–è€…å¯†ç é”™è¯¯ï¼");
+		} catch (UnauthorizedException e) {
 			token.clear();
 			result.put("success", false);
-			result.put("errorInfo", "ÓÃ»§Ã»ÓĞµ±Ç°½ÇÉ«£¡");
+			result.put("errorInfo", "ç”¨æˆ·æ²¡æœ‰å½“å‰è§’è‰²ï¼");
 		}
 		ResponseUtil.write(response, result);
 		return null;
 	}
-	
-	
+
 	/**
 	 * 
-	 * ÃÜÂëĞ£Ñé
+	 * å¯†ç æ ¡éªŒ
 	 * 
 	 * @param response
 	 * @param request
@@ -117,16 +127,16 @@ public class UserController {
 	 * @throws Exception
 	 */
 	@RequestMapping("/checkPassword")
-	public String checkPassword(HttpServletResponse response, HttpServletRequest request,User checkUser) throws Exception {
+	public String checkPassword(HttpServletResponse response, HttpServletRequest request, User checkUser)
+			throws Exception {
 		Map<String, Object> map = new HashMap<String, Object>();
 		JSONObject result = new JSONObject();
 		Subject user = SecurityUtils.getSubject();
-		UsernamePasswordToken token = new UsernamePasswordToken(checkUser.getId(),
-				checkUser.getPassword());
+		UsernamePasswordToken token = new UsernamePasswordToken(checkUser.getId(), checkUser.getPassword());
 		try {
 			user.login(token);
 			result.put("success", true);
-		}catch (Exception e) {
+		} catch (Exception e) {
 			result.put("success", false);
 		}
 		ResponseUtil.write(response, result);
@@ -134,7 +144,7 @@ public class UserController {
 	}
 
 	/**
-	 * ·ÖÒ³²éÑ¯ÓÃ»§
+	 * åˆ†é¡µæŸ¥è¯¢ç”¨æˆ·
 	 * 
 	 * @return
 	 * @throws Exception
@@ -152,13 +162,13 @@ public class UserController {
 		Integer pageSize = Integer.parseInt(rows);
 		userPage.setPageSize(pageSize);
 
-		// µÚ¼¸Ò³
+		// ç¬¬å‡ é¡µ
 		String pageIndex = page;
 		if (pageIndex == null || pageIndex == "") {
 			pageIndex = "1";
 		}
 		userPage.setPageIndex((Integer.parseInt(pageIndex) - 1) * pageSize);
-		// È¡µÃ×ÜÒ³Êı
+		// å–å¾—æ€»é¡µæ•°
 		int userCount = userService.userCount(userMap);
 		userPage.setCount(userCount);
 		userMap.put("pageIndex", userPage.getPageIndex());
@@ -166,7 +176,7 @@ public class UserController {
 
 		List<User> cusDevPlanList = userService.userPage(userMap);
 		JSONObject json = new JSONObject();
-		// °ÑList¸ñÊ½×ª»»³ÉJSON
+		// æŠŠListæ ¼å¼è½¬æ¢æˆJSON
 		JSONArray jsonArray = JSONArray.fromObject(cusDevPlanList);
 		json.put("rows", jsonArray);
 		json.put("total", userCount);
@@ -175,7 +185,7 @@ public class UserController {
 	}
 
 	/**
-	 * ĞŞ¸ÄÓÃ»§
+	 * ä¿®æ”¹ç”¨æˆ·
 	 * 
 	 * @return
 	 * @throws Exception
@@ -195,7 +205,7 @@ public class UserController {
 	}
 
 	/**
-	 * ÅúÁ¿„h³ıÓÃ‘ô
+	 * æ‰¹é‡åˆªé™¤ç”¨æˆ¶
 	 * 
 	 * @param response
 	 * @return
@@ -226,7 +236,7 @@ public class UserController {
 	}
 
 	/**
-	 * ĞÂÔöÓÃ‘ô
+	 * æ–°å¢ç”¨æˆ¶
 	 * 
 	 * @return
 	 * @throws Exception
@@ -246,7 +256,7 @@ public class UserController {
 	}
 
 	/**
-	 * ĞÂÔöÓÃ‘ô
+	 * ç”¨æˆ·åæ˜¯å¦å­˜åœ¨
 	 * 
 	 * @return
 	 * @throws Exception
@@ -264,6 +274,78 @@ public class UserController {
 		return null;
 	}
 
+	/**
+	 * æŸ¥è¯¢æ•°æ®åº“è¡¨
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/getTableName")
+	public String getTableName(HttpServletResponse response) throws Exception {
+		List<Map> tableNameList = userService.getTableName();// è¿™é‡Œåªé’ˆå¯¹Mysql
+		JSONArray jsonArray = new JSONArray();
+		JSONObject jsonObject = new JSONObject();
+		jsonObject.put("trueName", "è¯·é€‰æ‹©...");
+		// è½¬ä¸ºJSONæ ¼å¼çš„æ•°æ®
+		jsonArray.add(jsonObject);
+		// å°†listè½¬ä¸ºJSON
+		JSONArray rows = JSONArray.fromObject(tableNameList);
+		jsonArray.addAll(rows);
+		ResponseUtil.write(response, jsonArray);
+		return null;
+	}
+
+	/**
+	 * ç”Ÿæˆä»£ç 
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping("/codeGenerate")
+	public ResponseEntity<byte[]> codeGenerate(HttpServletResponse response, HttpServletRequest request, Model model)
+			throws Exception {
+		JSONObject json = new JSONObject();
+		String tableName = request.getParameter("tableName");
+		try {
+			File file = new File("E:\\java" + File.separator + tableName);
+			if (!file.exists()) {// å¦‚æœæ–‡ä»¶å¤¹ä¸å­˜åœ¨
+				file.mkdir();// åˆ›å»ºæ–‡ä»¶å¤¹
+			}
+			GeneratorUtil.codeGenerate(tableName);
+			FileOutputStream fos1 = new FileOutputStream(new File("E:\\java\\" + tableName + ".zip"));
+			ZipUtil.toZip("E:\\java\\" + tableName, fos1, true);
+			return download(request, request.getParameter("tableName"), model);
+		} catch (Exception e) {
+			json.put("success", false);
+			e.printStackTrace();
+		}
+		ResponseUtil.write(response, json);
+		return null;
+	}
+
+	public ResponseEntity<byte[]> download(HttpServletRequest request, String tableName, Model model)
+			throws IOException {
+
+		File file = new File("E:\\java\\" + tableName + ".zip");
+
+		HttpHeaders headers = new HttpHeaders();// httpå¤´ä¿¡æ¯
+
+		String downloadFileName = new String((tableName + ".zip").getBytes("UTF-8"), "utf-8");// è®¾ç½®ç¼–ç 
+
+		headers.setContentDispositionFormData("attachment", downloadFileName);
+
+		headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+
+		// MediaType:äº’è”ç½‘åª’ä»‹ç±»å‹ contentTypeï¼šå…·ä½“è¯·æ±‚ä¸­çš„åª’ä½“ç±»å‹ä¿¡æ¯
+		return new ResponseEntity<byte[]>(FileUtils.readFileToByteArray(file), headers, HttpStatus.CREATED);
+	}
+
+	/**
+	 * æŸ¥è¯¢ç»„åˆ—è¡¨
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
 	@RequestMapping("/listWithGroups")
 	public String listWithGroups(HttpServletResponse response, String rows, String page, User user) throws Exception {
 		PageInfo<User> userPage = new PageInfo<User>();
@@ -272,13 +354,13 @@ public class UserController {
 		Integer pageSize = Integer.parseInt(rows);
 		userPage.setPageSize(pageSize);
 
-		// µÚ¼¸Ò³
+		// ç¬¬å‡ é¡µ
 		String pageIndex = page;
 		if (pageIndex == null || pageIndex == "") {
 			pageIndex = "1";
 		}
 		userPage.setPageIndex((Integer.parseInt(pageIndex) - 1) * pageSize);
-		// È¡µÃ×ÜÒ³Êı
+		// å–å¾—æ€»é¡µæ•°
 		int userCount = userService.userCount(userMap);
 		userPage.setCount(userCount);
 		userMap.put("pageIndex", userPage.getPageIndex());
@@ -292,7 +374,7 @@ public class UserController {
 				buffer.append(g.getName() + ",");
 			}
 			if (buffer.length() > 0) {
-				// deleteCharAt É¾³ı×îºóÒ»¸öÔªËØ
+				// deleteCharAt åˆ é™¤æœ€åä¸€ä¸ªå…ƒç´ 
 				users.setGroups(buffer.deleteCharAt(buffer.length() - 1).toString());
 			} else {
 				user.setGroups(buffer.toString());
@@ -307,7 +389,7 @@ public class UserController {
 	}
 
 	/**
-	 * ĞŞ¸ÄÃÜÂë
+	 * ä¿®æ”¹å¯†ç 
 	 * 
 	 * @return
 	 * @throws Exception
@@ -328,7 +410,7 @@ public class UserController {
 	}
 
 	/**
-	 * ×é²éÓÃ»§
+	 * ç»„æŸ¥ç”¨æˆ·
 	 * 
 	 * @return
 	 * @throws Exception
@@ -338,32 +420,15 @@ public class UserController {
 		List<org.activiti.engine.identity.User> userList = identityService.createUserQuery().memberOfGroup(groupId)
 				.list();
 		JSONArray jsonArray = new JSONArray();
-		// ½«list×ªÎªJSON
+		// å°†listè½¬ä¸ºJSON
 		JSONArray rows = JSONArray.fromObject(userList);
 		jsonArray.addAll(rows);
 		ResponseUtil.write(response, jsonArray);
 		return null;
 	}
 
-	// /**
-	// * µÇ³ö
-	// *
-	// * @return
-	// * @throws Exception
-	// */
-	// @RequestMapping("/logout")
-	// @ResponseBody
-	// public String logout(HttpServletResponse response, HttpServletRequest
-	// request) {
-	// request.getSession().removeAttribute("currentMemberShip");
-	// JSONObject json = new JSONObject();
-	// json.put("success", true);
-	// ResponseUtil.write(response, json);
-	// return null;
-	// }
-
 	/**
-	 * Ö÷Ò³Ãæ
+	 * ä¸»é¡µé¢
 	 * 
 	 * @return
 	 */
@@ -441,14 +506,16 @@ public class UserController {
 	public String claimTaskManage() {
 		return "page/claimTaskManage";
 	}
-	
+
 	@RequestMapping("/code")
-	@ResponseBody
 	public String code() {
-		serfg.test();
-		return null;
+		return "page/code";
 	}
 
+	@RequestMapping("/login")
+	public String login() {
+		return "page/login";
+	}
 
 	@RequestMapping("/logout")
 	public String logout(HttpServletResponse response, HttpServletRequest request) {
@@ -465,5 +532,4 @@ public class UserController {
 		ResponseUtil.write(response, json);
 		return null;
 	}
-
 }

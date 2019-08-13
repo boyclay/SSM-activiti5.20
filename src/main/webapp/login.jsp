@@ -40,7 +40,6 @@
 							}
 						});
 	}
-
 	function resetValue() {
 		$("#userName").val("");
 		$("#password").val("");
@@ -80,10 +79,6 @@
 					<td><input id="groupId" name="groupId" class="easyui-combobox"
 						data-options="panelHeight:'auto',valueField:'id',textField:'name',url:'${pageContext.request.contextPath}/group/findGroup.action'"
 						value="请选择" /></td>
-				</tr>
-				<tr>
-					<td>记住我：</td>
-					<td><input  type="checkbox" id="rememberMe" name="rememberMe" class="easyui-validatebox"></td>
 				</tr>
 				<tr>
 					<td colspan="2"></td>

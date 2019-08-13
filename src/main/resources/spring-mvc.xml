@@ -31,9 +31,8 @@
 
 		<property name="defaultEncoding" value="UTF-8" />
 		<property name="maxUploadSize" value="10000000" />
-
 	</bean>
-	
+
 	<mvc:interceptors>
 		<mvc:interceptor>
 			<!-- /**的意思是所有文件夹及里面的子文件夹 /*是所有文件夹，不含子文件夹 /是web项目的根目录 -->

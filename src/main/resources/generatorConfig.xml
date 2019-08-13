@@ -11,9 +11,16 @@
 		<property name="beginningDelimiter" value="`" />
 		<property name="endingDelimiter" value="`" />
 		<plugin type="com.java.activiti.plugin.ServiceGeneratorPlugin">
-			<property name="targetProject" value="E:\github\activiti5.20\src\main\java"/>
-			<property name="servicePackage" value="com.java.activiti.service"/>
-			<property name="serviceImplPackage" value="com.java.activiti.service.impl"/>
+			<property name="targetProject" value="E:\java\${tableName}" />
+			<property name="servicePackage" value="com.java.activiti.service" />
+			<property name="serviceImplPackage" value="com.java.activiti.service.impl" />
+		</plugin>
+		<plugin type="com.java.activiti.plugin.ControllerGeneratorPlugin">
+			<property name="targetProject" value="E:\java\${tableName}" />
+			<property name="controllerPackage" value="com.java.activiti.controller" />
+		</plugin>
+		<plugin type="com.java.activiti.plugin.RenameMapperPlugin">
+			<property name="mapperSuffix" value="Dao" />
 		</plugin>
 		<jdbcConnection driverClass="com.mysql.jdbc.Driver"
 			connectionURL="jdbc:mysql://localhost:3306/db_employessleave?useUnicode=true&amp;characterEncoding=UTF-8"
@@ -21,21 +28,21 @@
 		</jdbcConnection>
 
 		<javaModelGenerator targetPackage="com.java.activiti.model"
-			targetProject="E:\github\activiti5.20\src\main\java">
+			targetProject="E:\java\${tableName}">
 			<property name="enableSubPackages" value="true" />
 		</javaModelGenerator>
 
 		<sqlMapGenerator targetPackage="com.java.activiti.mappers"
-			targetProject="E:\github\activiti5.20\src\main\java">
+			targetProject="E:\java\${tableName}">
 			<property name="enableSubPackages" value="true" />
 		</sqlMapGenerator>
 
 		<javaClientGenerator targetPackage="com.java.activiti.dao"
-			targetProject="E:\github\activiti5.20\src\main\java" type="XMLMAPPER">
+			targetProject="E:\java\${tableName}" type="XMLMAPPER">
 			<property name="enableSubPackages" value="true" />
 		</javaClientGenerator>
 
-		<table tableName="t_leave" domainObjectName="t_leave"
+		<table tableName="${tableName}" domainObjectName="${tableName}"
 			enableCountByExample="false" enableUpdateByExample="false"
 			enableDeleteByExample="false" enableSelectByExample="false"
 			selectByExampleQueryId="false">
