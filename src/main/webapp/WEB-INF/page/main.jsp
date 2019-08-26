@@ -336,6 +336,10 @@
 			</shiro:hasPermission>
 			<div title="系统管理" data-options="iconCls:'icon-system'"
 				style="padding: 10px">
+				<a href="javascript:openTab('聊天室','webChat','icon-user-earth')"
+					class="easyui-linkbutton"
+					data-options="plain:true,iconCls:'icon-user-earth'"
+					style="width: 150px;">聊天室</a> 
 				<a href="javascript:openPasswordModifyDialog()"
 					class="easyui-linkbutton"
 					data-options="plain:true,iconCls:'icon-modifyPassword'"

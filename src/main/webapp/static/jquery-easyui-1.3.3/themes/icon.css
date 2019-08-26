@@ -90,14 +90,13 @@
 	background:url('usericons/modifyPassword.png') no-repeat center center;
 }
 
-
+.icon-user-earth{
+	background:url('usericons/user_earth.png') no-repeat center center;
+}
 
 .icon-exit{
 	background:url('usericons/exit.png') no-repeat center center;
 }
-
-
-
 
 .icon-user{
 	background:url('usericons/user.png') no-repeat center center;

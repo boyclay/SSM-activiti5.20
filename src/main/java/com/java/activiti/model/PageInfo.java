@@ -4,7 +4,7 @@ import java.util.List;
 /*
  * 分页工具类
  */
-public class PageInfo<T> {
+public class PageInfo<T>  {
 	public Integer pageSize = 5;
 	private Integer count;// 总记录数
 	private List<T> pageList;// 当前页的记录集合

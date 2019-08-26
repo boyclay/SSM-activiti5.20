@@ -4,10 +4,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -21,13 +23,20 @@ import org.apache.shiro.authc.ExcessiveAttemptsException;
 import org.apache.shiro.authc.LockedAccountException;
 import org.apache.shiro.authc.UsernamePasswordToken;
 import org.apache.shiro.authz.UnauthorizedException;
+import org.apache.shiro.mgt.SessionsSecurityManager;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.session.mgt.DefaultSessionManager;
+import org.apache.shiro.session.mgt.eis.SessionDAO;
+import org.apache.shiro.subject.SimplePrincipalCollection;
 import org.apache.shiro.subject.Subject;
+import org.apache.shiro.subject.support.DefaultSubjectContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
@@ -35,9 +44,11 @@ import com.java.activiti.model.Group;
 import com.java.activiti.model.MemberShip;
 import com.java.activiti.model.PageInfo;
 import com.java.activiti.model.User;
+import com.java.activiti.server.WebSocketService;
 import com.java.activiti.service.GroupService;
 import com.java.activiti.service.MemberShipService;
 import com.java.activiti.service.UserService;
+import com.java.activiti.shiro.RedisSessionDAO;
 import com.java.activiti.util.GeneratorUtil;
 import com.java.activiti.util.ResponseUtil;
 import com.java.activiti.util.ShiroMD5Util;
@@ -67,6 +78,8 @@ public class UserController {
 
 	@Resource
 	private IdentityService identityService;
+	
+	
 
 	public static TreeSet<String> ts = new TreeSet<String>();
 
@@ -427,6 +440,20 @@ public class UserController {
 		return null;
 	}
 
+	@RequestMapping("/room")
+	public String h(ModelMap model, String uname, String roomid) {
+		model.put("uname", uname);
+		model.put("roomid", roomid);
+		// List<String> userList = new ArrayList<String>();
+		// ConcurrentHashMap<String, WebSocketService> r
+		// =WebSocketService.getRoomList().get(roomid);
+		// for(String i:r.keySet()){ //遍历该房间
+		// userList.add(i);
+		// }
+		// model.put("memberlist",userService.getMemberList(userList));
+		return "page/room";
+	}
+
 	/**
 	 * 主页面
 	 * 
@@ -510,6 +537,11 @@ public class UserController {
 	@RequestMapping("/code")
 	public String code() {
 		return "page/code";
+	}
+
+	@RequestMapping("/webChat")
+	public String webChat() {
+		return "page/webChat";
 	}
 
 	@RequestMapping("/login")

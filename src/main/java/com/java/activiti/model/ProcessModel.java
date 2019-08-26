@@ -1,7 +1,14 @@
 package com.java.activiti.model;
 
-public class ProcessModel {
+import java.io.Serializable;
+
+public class ProcessModel implements Serializable{
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7343063119070677576L;
+
 	private String id; // 主键 角色名
 	
 	private String processName; // 名称

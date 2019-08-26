@@ -72,4 +72,11 @@ public interface UserDao {
 	 * @return
 	 */
 	public List<Map>  getTableName();
+	
+	/**
+	 * »ñÈ¡firstName¸úlastName
+	 * @param map
+	 * @return
+	 */
+	public List getMemberList(List<String> userList);
 }

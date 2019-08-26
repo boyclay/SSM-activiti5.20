@@ -1,7 +1,13 @@
 package com.java.activiti.model;
 
-public class MemberShip {
+import java.io.Serializable;
 
+public class MemberShip implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6373264774108927162L;
 	private User user; // ÓÃ»§
 	private Group group; // ½ÇÉ«
 	private String userId;

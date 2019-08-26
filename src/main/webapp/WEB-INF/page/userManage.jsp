@@ -209,8 +209,10 @@
 		$("#fm").form("submit", {
 			url : '${pageContext.request.contextPath}/user/updateUser.action',
 			onSubmit : function() {
-				$('#password').validatebox({required:false});
-// 				$('#password').removeClass('easyui-validatebox');
+				$('#password').validatebox({
+					required : false
+				});
+				// 				$('#password').removeClass('easyui-validatebox');
 				return $(this).form("validate");
 			},
 			success : function(result) {
@@ -257,7 +259,9 @@
 		$("#email").val("");
 		$("#ptword").show();
 		$("#pt").show();
-		$('#password').validatebox({required:true});
+		$('#password').validatebox({
+			required : true
+		});
 	}
 
 	function closeUserDialog() {
@@ -311,8 +315,8 @@
 	</div>
 
 	<div id="dlg" class="easyui-dialog"
-		style="width: 620px; height: 250px; padding: 10px 20px" closed="true" closable="false"
-		buttons="#dlg-buttons">
+		style="width: 680px; height: 300px; padding: 10px 20px" closed="true"
+		closable="false" buttons="#dlg-buttons">
 
 		<form id="fm" method="post">
 			<table cellpadding="8px">
@@ -336,7 +340,7 @@
 				</tr>
 				<tr>
 					<td>邮箱：</td>
-					<td colspan="4"><input type="text" style="width: 200px"
+					<td colspan="2"><input type="text" style="width: 200px"
 						id="email" name="email" class="easyui-validatebox"
 						validType="email" required="true" /> <input type="hidden"
 						id="flag" name="flag" /></td>
@@ -353,8 +357,8 @@
 
 
 	<div id="dlg2" class="easyui-dialog"
-		style="width: 450px; height: 200px; padding: 10px 20px" closed="true" closable="false"
-		buttons="#dlg2-buttons">
+		style="width: 450px; height: 200px; padding: 10px 20px" closed="true"
+		closable="false" buttons="#dlg2-buttons">
 		<div id="groupsList" style="padding: 10px"></div>
 	</div>
 

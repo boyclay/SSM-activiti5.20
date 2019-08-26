@@ -12,11 +12,17 @@
 
 
 	<bean id="objectMapper" class="com.fasterxml.jackson.databind.ObjectMapper" />
-
+	<!-- jedis -->
+	<bean class="redis.clients.jedis.JedisPool">
+		<constructor-arg ref="jedisPoolConfig" />
+		<constructor-arg value="127.0.0.1" />
+		<constructor-arg value="6379" />
+	</bean>
+	<bean class="redis.clients.jedis.JedisPoolConfig" id="jedisPoolConfig" />
 	<!-- shiro -->
 	<bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
 		<property name="securityManager" ref="securityManager" />
-<!-- 		<property name="loginUrl" value="/user/doLogin" /> -->
+		<!-- <property name="loginUrl" value="/user/doLogin" /> -->
 		<property name="filters">
 			<map>
 				<!--退出过滤器 -->
@@ -25,12 +31,12 @@
 		</property>
 		<property name="filterChainDefinitions">
 			<value>
-<!-- 				/login.jsp = anon -->
+				<!-- /login.jsp = anon -->
 				/user/userLogin.action = anon
 				/group/findGroup.action = anon
 				/user/logout.do = logout
 				/user/main.action = user
-<!-- 			X	/user/doLogin = user -->
+				<!-- X /user/doLogin = user -->
 				/* = authc
 			</value>
 		</property>
@@ -43,6 +49,7 @@
 	<bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
 		<property name="realm" ref="userRealm"></property>
 		<property name="rememberMeManager" ref="rememberMeManager"></property>
+		<property name="sessionManager" ref="sessionManager"></property>
 	</bean>
 
 	<bean id="userRealm" class="com.java.activiti.shiro.UserRealm">
@@ -67,6 +74,14 @@
 
 	<bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
 		<property name="cookie" ref="rememberMe"></property>
+	</bean>
+
+	<bean id="sessionManager"
+		class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+		<property name="sessionDAO" ref="redisSessionDAO"></property>
+	</bean>
+
+	<bean id="redisSessionDAO" class="com.java.activiti.shiro.RedisSessionDAO">
 	</bean>
 
 	<!--form表单验证的过滤器 -->
@@ -144,7 +159,7 @@
 	</aop:config>
 
 	<!-- 自动扫描 -->
-	<context:component-scan base-package="com.java.activiti.service" />
+	<context:component-scan base-package="com.java.activiti.service,com.java.activiti.util" />
 
 	<!-- 导入Activiti配置 -->
 	<import resource="classpath:activiti-context.xml" />

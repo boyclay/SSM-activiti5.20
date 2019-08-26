@@ -1,5 +1,6 @@
 package com.java.activiti.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -7,8 +8,12 @@ import java.util.Date;
  * @author user
  *
  */
-public class Leave {
+public class Leave implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 8440571899071257397L;
 	private Integer id; // ±‡∫≈
 	private User user; // «ÎºŸ»À
 	private Date leaveDate;// «ÎºŸ»’∆⁄

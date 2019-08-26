@@ -88,4 +88,8 @@ public class UserServiceImpl implements UserService{
 	public List<Map>  getTableName() {
 		return userDao.getTableName();
 	}
+	@Override
+	public List getMemberList(List<String> userList) {
+		return userDao.getMemberList(userList);
+	}
 }

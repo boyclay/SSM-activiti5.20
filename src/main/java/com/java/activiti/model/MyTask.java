@@ -1,5 +1,6 @@
 package com.java.activiti.model;
 
+import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -7,8 +8,12 @@ import java.util.Date;
  * @author user
  *
  */
-public class MyTask {
+public class MyTask implements Serializable{
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7204139637862487338L;
 	private String id; // 任务id
 	private String name; // 任务名称
 	private Date createTime;  // 创建日期
