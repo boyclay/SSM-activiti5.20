@@ -25,13 +25,25 @@
 		}
 		var row = selectRows[0];
 		$("#dlg2").dialog("open").dialog("setTitle", "设置用户权限");
-		loadAllGroups(); // 加载所有角色
+
+		function a(callback) {
+			setTimeout(function() {
+				pageData = 'pppp-a';
+				console.log("pageData-a-1000:" + pageData);
+				callback()//////////////
+			}, 1000);
+
+		}
+		loadAllGroups(function () {
+            setRoles(selectRows[0].id);
+        });
+// 		loadAllGroups(function())); // 加载所有角色
 		//延时加载！！！！！2019/06/03
-		setRoles(selectRows[0].id);
+// 		setRoles(selectRows[0].id);
 		url = "${pageContext.request.contextPath}/memberShip/updateMemberShip.action?userId="
 				+ selectRows[0].id;
 	}
-	function loadAllGroups() {
+	function loadAllGroups(callback) {
 		$
 				.post(
 						"${pageContext.request.contextPath}/group/listAllGroups.action",
@@ -46,6 +58,7 @@
 										+ '</font>' + '&nbsp;';
 								$("#groupsList").append(cbStr);
 							}
+							callback()
 						}, "json");
 	}
 
@@ -59,8 +72,8 @@
 							var groups = result.groups;
 							var groupsArr = groups.split(",");
 							for (var i = 0; i < groupsArr.length; i++) {
-								$("[value=" + groupsArr[i] + "]:checkbox")
-										.attr("checked", true);
+								$("[value='" + groupsArr[i] + "']:checkbox")
+										.prop("checked", true);
 							}
 						}, "json");
 	}
