@@ -199,7 +199,7 @@ public class TaskController {
 				// 根据任务名称查询
 				.taskNameLike("%" + s_name + "%")
 				// 返回带分页的结果集合
-				.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+				.orderByTaskCreateTime().desc().listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
 		// 这里需要使用一个工具类来转换一下主要是转成JSON格式
 		List<MyTask> MyTaskList = new ArrayList<MyTask>();
 		for (Task t : taskList) {
@@ -489,13 +489,13 @@ public class TaskController {
 		if (status.equals("1")) {
 			histList = historyService.createHistoricTaskInstanceQuery().taskAssignee(userId)
 					.taskNameLike("%" + s_name + "%").finished()
-					.listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+					.orderByHistoricTaskInstanceEndTime().desc().listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
 
 			histCount = historyService.createHistoricTaskInstanceQuery().taskAssignee(userId)
 					.taskNameLike("%" + s_name + "%").finished().count();
 		} else {
 			histList = historyService.createHistoricTaskInstanceQuery().taskAssignee(userId)
-					.taskNameLike("%" + s_name + "%").listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
+					.taskNameLike("%" + s_name + "%").orderByHistoricTaskInstanceEndTime().desc().listPage(pageInfo.getPageIndex(), pageInfo.getPageSize());
 
 			histCount = historyService.createHistoricTaskInstanceQuery().taskAssignee(userId)
 					.taskNameLike("%" + s_name + "%").count();
