@@ -26,14 +26,6 @@
 		var row = selectRows[0];
 		$("#dlg2").dialog("open").dialog("setTitle", "设置用户权限");
 
-		function a(callback) {
-			setTimeout(function() {
-				pageData = 'pppp-a';
-				console.log("pageData-a-1000:" + pageData);
-				callback()//////////////
-			}, 1000);
-
-		}
 		loadAllGroups(function () {
             setRoles(selectRows[0].id);
         });
@@ -58,7 +50,7 @@
 										+ '</font>' + '&nbsp;';
 								$("#groupsList").append(cbStr);
 							}
-							callback()
+							callback();
 						}, "json");
 	}
 
