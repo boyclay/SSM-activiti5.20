@@ -9,6 +9,7 @@ import org.java_websocket.handshake.ServerHandshake;
 
 public class MyWebSocketClient extends WebSocketClient {
 
+	
 	Logger logger = Logger.getLogger(MyWebSocketClient.class);
 
 	public MyWebSocketClient(URI serverUri) {
