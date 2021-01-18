@@ -9,9 +9,6 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.sf.json.JSONArray;
-import net.sf.json.JSONObject;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -21,6 +18,9 @@ import com.java.activiti.model.PageInfo;
 import com.java.activiti.model.User;
 import com.java.activiti.service.GroupService;
 import com.java.activiti.util.ResponseUtil;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  * ½ÇÉ«¹ÜÀí
